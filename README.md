@@ -349,27 +349,36 @@ Users can:
 
 # Project Structure
 Marketing_Campaign_Performance_Prediction
-
-│
-├── feature_engineered_marketing_campaign_data.csv
-│
-├── Step5_Model_Building.py
-│
-├── Step6_Model_Evaluation.py
-│
-├── Step7_Insights_Reporting.py
-│
-├── app.py
-│
-├── regression_models.pkl
-│
-├── classification_models.pkl
-│
-├── Regression_Model_Evaluation.csv
-│
-├── Classification_Model_Evaluation.csv
-│
-└── README.md
+|
+↓
+feature_engineered_marketing_campaign_data.csv
+|
+↓
+Step5_Model_Building.py
+|
+↓
+Step6_Model_Evaluation.py
+|
+↓
+Step7_Insights_Reporting.py
+|
+↓
+app.py
+|
+↓
+regression_models.pkl
+|
+↓
+classification_models.pkl
+|
+↓
+Regression_Model_Evaluation.csv
+|
+↓
+Classification_Model_Evaluation.csv
+|
+↓
+README.md
 
 
 
