@@ -108,6 +108,8 @@ Performed preprocessing steps:
 - Missing value handling
 - Duplicate checking
 - Data type correction
+  - Date column converted to datetime using `pd.to_datetime()`
+  - Invalid date values handled with `errors="coerce"`
 - Feature transformation
 - Categorical encoding
 - Numerical scaling
@@ -167,6 +169,7 @@ Profit_Flag
 
 0 → Loss Campaign
 
+The target is a binary classification variable.
 
 
 ## Encoding
@@ -182,12 +185,12 @@ Separate datasets were created:
 
 ### Regression
 
-Target:
+Target: Revenue
 
 
 ### Classification
 
-Target:
+Target: Profit_Flag
 
 
 ROI was removed from classification features to prevent data leakage.
@@ -260,6 +263,8 @@ Random Forest Regressor
 
 R² Score = 0.908
 
+Selected because it achieved the highest R² score among the evaluated regression models.
+
 
 
 ---
@@ -288,6 +293,8 @@ Used metrics:
 Random Forest Classifier
 
 Accuracy = 96%
+
+Selected because it achieved the highest accuracy among the evaluated classification models.
 
 
 ---
@@ -404,7 +411,7 @@ README.md
 
 # Future Enhancements
 
-- Hyperparameter tuning
+- Further hyperparameter tuning and optimization
 - Advanced ML algorithms
 - Real-time campaign monitoring
 - Automated budget optimization
@@ -412,6 +419,15 @@ README.md
 
 
 ---
+
+---
+
+# Project Scope Notes
+
+- **ELT / ETL:** No separate ELT or ETL pipeline is included in the documented workflow; the project focuses on data collection, preprocessing, EDA, feature engineering, model building, evaluation, reporting, and Streamlit deployment.
+- **Data Migration:** No MongoDB-to-SQL data migration is part of this project.
+- **Statistical Significance Testing:** No separate hypothesis/significance test is documented; model performance is evaluated using the regression and classification metrics listed above.
+- **Class Imbalance:** No separate class-imbalance technique is documented in this README.
 
 # Conclusion
 
