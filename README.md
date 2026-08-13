@@ -134,24 +134,6 @@ A `Brand` column is added to preserve the identity of each source dataset, and t
 
 Median is used for numerical variables because it is less sensitive to extreme values, while mode is appropriate for categorical variables.
 
-## Duplicate Checking
-
-Duplicate records are checked before model development.
-
-## Date Conversion
-
-The `Date` column is converted into datetime format:
-
-```python
-if "Date" in campaign_df.columns:
-
-    campaign_df["Date"] = pd.to_datetime(
-        campaign_df["Date"],
-        errors="coerce"
-    )
-```
-
-`errors="coerce"` converts invalid date values into `NaT` instead of stopping the preprocessing process.
 
 ## Other preprocessing
 
