@@ -108,8 +108,6 @@ Performed preprocessing steps:
 - Missing value handling
 - Duplicate checking
 - Data type correction
-  - Date column converted to datetime using `pd.to_datetime()`
-  - Invalid date values handled with `errors="coerce"`
 - Feature transformation
 - Categorical encoding
 - Numerical scaling
@@ -191,10 +189,6 @@ Target: Revenue
 ### Classification
 
 Target: Profit_Flag
-
-
-ROI was removed from classification features to prevent data leakage.
-
 
 ---
 
@@ -421,13 +415,6 @@ README.md
 ---
 
 ---
-
-# Project Scope Notes
-
-- **ELT / ETL:** No separate ELT or ETL pipeline is included in the documented workflow; the project focuses on data collection, preprocessing, EDA, feature engineering, model building, evaluation, reporting, and Streamlit deployment.
-- **Data Migration:** No MongoDB-to-SQL data migration is part of this project.
-- **Statistical Significance Testing:** No separate hypothesis/significance test is documented; model performance is evaluated using the regression and classification metrics listed above.
-- **Class Imbalance:** No separate class-imbalance technique is documented in this README.
 
 # Conclusion
 
