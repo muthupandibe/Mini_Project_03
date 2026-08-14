@@ -1,383 +1,91 @@
-# Marketing Campaign Performance Prediction
+📊 Multi-Brand Marketing Campaign Performance Prediction
 
-## 1. Project Overview
+📌 Project Overview
 
-This project uses Machine Learning to analyze marketing campaign data from **Nykaa, Purplle, and Tira**.
+The Multi-Brand Marketing Campaign Performance Prediction project is a Machine Learning based application developed to analyze and predict the performance of marketing campaigns across multiple brands.
 
-The project has two main goals:
+The project combines Data Collection, Data Preprocessing, Feature Engineering, Exploratory Data Analysis (EDA), Machine Learning, Model Evaluation, and Streamlit Deployment.
 
-- **Revenue Prediction** using Regression
-- **Profit/Loss Prediction** using Classification
+The system provides two major predictions:
 
-The project includes data cleaning, EDA, feature engineering, model building, GridSearchCV tuning, evaluation, business insights, and Streamlit deployment.
+💰 Revenue Prediction using Regression
 
----
+🎯 Profit/Loss Prediction using Classification
 
-## 2. Business Problem
+The final trained Machine Learning models are integrated into an interactive Streamlit web application.
 
-Marketing campaigns generate data such as:
+🎯 Project Objective
 
-- Impressions
-- Clicks
-- Leads
-- Conversions
-- Acquisition Cost
-- Revenue
-- ROI
-- Customer Segment
-- Campaign Type
-- Marketing Channels
+The main objective of this project is to help businesses understand marketing campaign performance and make data-driven decisions.
 
-The aim is to use this data to understand campaign performance, predict revenue, and identify whether a campaign is likely to be profitable or loss-making.
+Main Objectives
 
----
+Predict expected campaign revenue.
 
-## 3. Project Objectives
+Predict whether a campaign will be profitable or result in a loss.
 
-1. Combine data from Nykaa, Purplle, and Tira.
-2. Clean and preprocess the data.
-3. Handle missing values and duplicates.
-4. Perform Exploratory Data Analysis (EDA).
-5. Process the `Channel_Used` feature.
-6. Create the `Profit_Flag` target.
-7. Build Revenue prediction models.
-8. Build Profit/Loss classification models.
-9. Use GridSearchCV for hyperparameter tuning.
-10. Evaluate and compare the models.
-11. Generate business insights.
-12. Deploy the project using Streamlit.
+Analyze campaign performance across different brands.
 
----
+Identify effective marketing channels.
 
-## 4. Project Workflow
+Analyze target audience performance.
 
-```text
-Raw CSV Files
-      ↓
+Understand important factors affecting campaign revenue.
+
+Generate useful business recommendations.
+
+Provide an interactive prediction dashboard using Streamlit.
+
+🏢 Brands Covered
+
+The project combines marketing campaign information from multiple brands.
+
+Source Brands
+
+Nykaa
+
+Purplle
+
+Tira
+
+A Brand column is added to identify the source brand.
+
+🔄 Project Workflow
+
 Data Collection
-      ↓
-Data Cleaning & Preprocessing
-      ↓
-EDA
-      ↓
+       ↓
+Data Preprocessing
+       ↓
 Feature Engineering
-      ↓
-Train/Test Split
-      ↓
+       ↓
+Exploratory Data Analysis
+       ↓
+Feature Selection
+       ↓
 Model Building
-      ↓
-GridSearchCV
-      ↓
+       ↓
+GridSearchCV Hyperparameter Tuning
+       ↓
 Model Evaluation
-      ↓
-Business Insights
-      ↓
+       ↓
+Insights & Reporting
+       ↓
+Model Saving
+       ↓
 Streamlit Deployment
-```
 
----
+📂 Project Structure
 
-## 5. Dataset
-
-### Input Files
-
-- `nykaa_campaign_data_with_nulls.csv`
-- `purplle_campaign_data_with_nulls.csv`
-- `tira_campaign_data_with_nulls.csv`
-
-These files are combined into:
-
-- `combined_marketing_campaign_data.csv`
-
-A `Brand` column identifies each brand.
-
-### Important Features
-
-- Campaign_ID
-- Campaign_Type
-- Date
-- Duration
-- Target_Audience
-- Customer_Segment
-- Language
-- Impressions
-- Clicks
-- Leads
-- Conversions
-- Engagement_Score
-- Acquisition_Cost
-- Revenue
-- ROI
-- Channel_Used
-
-### Created Features
-
-- `Brand`
-- `Profit_Flag`
-- Multi-label channel features
-
----
-
-## 6. Data Preprocessing
-
-The following steps are performed:
-
-- Handle missing values
-- Remove duplicates
-- Correct data types
-- Prepare numerical features
-- Prepare categorical features
-- Apply scaling where required
-
-### Missing Values
-
-- Numerical columns → **Median**
-- Categorical columns → **Mode**
-
-Median is used because it is less affected by extreme values.
-
----
-
-## 7. Exploratory Data Analysis
-
-EDA is performed to understand the data before Machine Learning.
-
-### Analysis Includes
-
-- Revenue distribution
-- ROI distribution
-- Outlier detection
-- Acquisition Cost vs Revenue
-- Leads vs Conversions
-- Brand-wise performance
-- Correlation analysis
-- Channel performance
-
-### EDA Outputs
-
-- `EDA_Summary.csv`
-- `Revenue_Correlation.csv`
-- `Top_10_Campaigns.csv`
-- `Bottom_10_Campaigns.csv`
-- `brand_revenue.html`
-
----
-
-## 8. Feature Engineering
-
-### Profit_Flag
-
-The classification target is:
-
-```text
-1 → Profit
-0 → Loss
-```
-
-### Targets
-
-**Regression Target:**
-
-```text
-Revenue
-```
-
-**Classification Target:**
-
-```text
-Profit_Flag
-```
-
-### Channel_Used
-
-A campaign can use multiple channels, for example:
-
-```text
-Facebook, Instagram
-Facebook, Google, YouTube
-WhatsApp, Email
-```
-
-Therefore, `Channel_Used` is processed using **Multi-Label Encoding**.
-
----
-
-## 9. Data Leakage Prevention
-
-`ROI` is removed from the classification features because it is directly related to profitability.
-
-This helps prevent **data leakage** and avoids unrealistically high model performance.
-
----
-
-## 10. Machine Learning Models
-
-### A. Regression — Revenue Prediction
-
-**Target:** `Revenue`
-
-Models:
-
-1. Linear Regression
-2. Decision Tree Regressor
-3. Random Forest Regressor
-
-### B. Classification — Profit/Loss Prediction
-
-**Target:** `Profit_Flag`
-
-Models:
-
-1. Logistic Regression
-2. Decision Tree Classifier
-3. Random Forest Classifier
-
----
-
-## 11. GridSearchCV
-
-GridSearchCV is used for hyperparameter tuning.
-
-### Purpose
-
-It tests different parameter combinations using cross-validation and helps find a better model configuration.
-
-```text
-Base Model
-    ↓
-Parameter Grid
-    ↓
-GridSearchCV
-    ↓
-Cross-Validation
-    ↓
-Best Parameters
-    ↓
-Tuned Model
-```
-
----
-
-## 12. Model Evaluation
-
-### Regression Metrics
-
-- MSE
-- RMSE
-- MAE
-- R²
-
-### Regression Results
-
-| Model | R² |
-|---|---:|
-| Linear Regression | 0.762 |
-| Decision Tree Regressor | 0.826 |
-| **Random Forest Regressor** | **0.908** |
-
-**Best Regression Model:** Random Forest Regressor
-
-**R² Score:** 0.908
-
-### Classification Metrics
-
-- Accuracy
-- Precision
-- Recall
-- F1 Score
-
-### Classification Results
-
-| Model | Accuracy |
-|---|---:|
-| Logistic Regression | 92.54% |
-| Decision Tree Classifier | 94.80% |
-| **Random Forest Classifier** | **96.00%** |
-
-**Best Classification Model:** Random Forest Classifier
-
-**Accuracy:** 96%
-
----
-
-## 13. Feature Importance
-
-Feature importance is used to understand which features contribute most to model predictions.
-
-Output files:
-
-- `Feature_Importance.csv`
-- `Regression_Feature_Importance.csv`
-
----
-
-## 14. Business Insights
-
-The project focuses on factors such as:
-
-- Customer Segment
-- Campaign Type
-- Marketing Channel
-- Engagement Score
-- Leads
-- Conversions
-- Acquisition Cost
-
-These factors help understand campaign performance and support marketing decisions.
-
----
-
-## 15. Business Recommendations
-
-1. Invest more in high-performing campaigns.
-2. Focus on channels with better engagement and conversions.
-3. Improve customer targeting.
-4. Reduce spending on low-performing campaigns.
-5. Use predicted revenue before major campaign investments.
-6. Use Profit/Loss predictions when selecting campaigns.
-7. Optimize marketing budget allocation.
-8. Monitor campaign performance regularly.
-
----
-
-## 16. Streamlit Application
-
-The Streamlit application is stored in:
-
-```text
-app.py
-```
-
-The application:
-
-- Accepts campaign details
-- Applies preprocessing
-- Predicts Revenue
-- Predicts Profit/Loss
-- Displays prediction results
-
-Run the application using:
-
-```bash
-streamlit run app.py
-```
-
----
-
-## 17. Project Structure
-
-```text
-PROJECT_NO_03/
+Project_no_03/
 │
-├── models/
-├── app.py
 ├── Data_Collection.py
 ├── Data_Preprocessing.py
-├── EDA.py
 ├── Feature_Engineering.py
-├── Model_Building.py
-├── Model_Evaluation.py
-├── Insights_Reporting.py
+├── Step4_EDA.py
+├── Step5_Model_Building.py
+├── Step6_Model_Evaluation.py
+├── Step7_Insights_Reporting.py
+├── app.py
 │
 ├── nykaa_campaign_data_with_nulls.csv
 ├── purplle_campaign_data_with_nulls.csv
@@ -387,110 +95,657 @@ PROJECT_NO_03/
 ├── cleaned_marketing_campaign_data.csv
 ├── feature_engineered_marketing_campaign_data.csv
 │
-├── channel_classes.pkl
-├── EDA_Summary.csv
-├── Revenue_Correlation.csv
-├── Top_10_Campaigns.csv
-├── Bottom_10_Campaigns.csv
-├── brand_revenue.html
+└── models/
+    ├── Best_Regression_Model.pkl
+    └── Best_Classification_Model.pkl
+
+📥 1. Data Collection
+
+Marketing campaign data is collected from three different brand datasets:
+
+Nykaa
+
+Purplle
+
+Tira
+
+A Brand column is added to each dataset to identify the corresponding brand.
+
+The datasets are then combined into a single dataset.
+
+Output
+
+combined_marketing_campaign_data.csv
+
+🧹 2. Data Preprocessing
+
+The collected dataset is cleaned and prepared for analysis and Machine Learning.
+
+Preprocessing Steps
+
+Handling missing values.
+
+Converting data types.
+
+Removing duplicate records.
+
+Handling numerical variables.
+
+Handling categorical variables.
+
+Checking data consistency.
+
+Preparing clean data for feature engineering.
+
+Missing Value Treatment
+
+For numerical columns:
+
+Median Imputation
+
+For categorical columns:
+
+Mode Imputation
+
+Output
+
+cleaned_marketing_campaign_data.csv
+
+⚙️ 3. Feature Engineering
+
+Feature Engineering is performed to create meaningful features from the existing campaign variables.
+
+CTR
+
+CTR = (Clicks / Impressions) × 100
+
+CTR measures the percentage of impressions that resulted in clicks.
+
+Conversion Rate
+
+Conversion Rate = (Conversions / Clicks) × 100
+
+It measures how effectively clicks are converted into conversions.
+
+Cost Per Click
+
+Cost Per Click = Acquisition Cost / Clicks
+
+Cost Per Conversion
+
+Cost Per Conversion = Acquisition Cost / Conversions
+
+Lead Conversion Rate
+
+Lead Conversion Rate = (Conversions / Leads) × 100
+
+Marketing Channel Encoding
+
+Marketing channels are converted into numerical features using encoding techniques.
+
+The project includes channel features such as:
+
+Channel_Email
+Channel_Facebook
+Channel_Google
+Channel_Instagram
+Channel_Whatsapp
+Channel_Youtube
+
+🎯 Profit Flag
+
+A binary target variable called Profit_Flag is created based on campaign ROI.
+
+Profit_Flag = 1 → Profit
+Profit_Flag = 0 → Loss
+
+This target variable is used for the classification problem.
+
+📊 4. Exploratory Data Analysis
+
+Exploratory Data Analysis is performed to understand the dataset and identify important patterns and relationships.
+
+EDA Techniques
+
+Univariate Analysis
+
+Bivariate Analysis
+
+Multivariate Analysis
+
+Distribution Analysis
+
+Correlation Analysis
+
+Outlier Analysis
+
+Visualizations
+
+The project includes:
+
+Brand-wise Revenue
+
+Campaign Type Performance
+
+Top Performing Campaigns
+
+Lowest Performing Campaigns
+
+Spend vs Revenue
+
+Correlation Heatmap
+
+Marketing Channel Analysis
+
+Target Audience Analysis
+
+Revenue Distribution
+
+Campaign Performance Analysis
+
+🤖 5. Machine Learning
+
+Two Machine Learning problems are implemented.
+
+💰 Regression
+
+The regression model predicts:
+
+Revenue
+
+Regression Algorithms
+
+Linear Regression
+
+Decision Tree Regressor
+
+Random Forest Regressor
+
+The best-performing regression model is selected for final prediction.
+
+🎯 Classification
+
+The classification model predicts:
+
+Profit_Flag
+
+Classification Algorithms
+
+Logistic Regression
+
+Decision Tree Classifier
+
+Random Forest Classifier
+
+The best-performing classification model is selected for final prediction.
+
+🔍 6. Hyperparameter Tuning
+
+GridSearchCV is used for hyperparameter tuning.
+
+Purpose of GridSearchCV
+
+Find the best hyperparameter combination.
+
+Improve model performance.
+
+Reduce manual parameter selection.
+
+Improve model generalization.
+
+Select the best model configuration.
+
+📈 7. Model Evaluation
+
+Regression Evaluation Metrics
+
+R² Score
+
+MAE
+
+MSE
+
+RMSE
+
+MAPE
+
+Classification Evaluation Metrics
+
+Accuracy
+
+Precision
+
+Recall
+
+F1 Score
+
+Confusion Matrix
+
+ROC Curve
+
+ROC-AUC
+
+🏆 Model Performance
+
+Regression Results
+
+The current model evaluation produced approximately:
+
+R²   : 0.92
+MAE  : 67,719.23
+RMSE : 134,849.96
+MAPE : 18.86%
+
+An R² score of approximately 0.92 indicates that the regression model explains a large proportion of the variation in campaign revenue.
+
+Classification Results
+
+The classification model achieved approximately:
+
+Accuracy : 90.33%
+
+An accuracy of approximately 90.33% indicates that the selected classification model performs well in predicting whether a campaign is profitable or not.
+
+Note: Other classification metrics such as Precision, Recall, F1 Score and ROC-AUC should be updated if the final evaluation results are available.
+
+💾 8. Model Saving
+
+The final trained models are saved using joblib.
+
+models/
 │
-├── Regression_Comparison.csv
-├── Regression_Model_Comparison.csv
-├── Classification_Comparison.csv
-├── Classification_Model_Comparison.csv
-├── Regression_Feature_Importance.csv
-└── Feature_Importance.csv
-```
+├── Best_Regression_Model.pkl
+└── Best_Classification_Model.pkl
 
----
+The Streamlit application loads these trained models directly.
 
-## 18. Technologies Used
+The final Streamlit application does not require:
 
-- Python
-- Pandas
-- NumPy
-- Scikit-learn
-- GridSearchCV
-- Matplotlib
-- Seaborn
-- Plotly
-- Streamlit
-- Joblib / Pickle
+regression_features.pkl
+classification_features.pkl
 
----
+🌐 9. Streamlit Application
 
-## 19. Installation
+The Machine Learning models are deployed using Streamlit.
 
-Create a virtual environment:
+The application provides an interactive interface for campaign analysis and prediction.
 
-```bash
-python -m venv .venv
-```
+🏠 Dashboard
 
-Activate it on Windows:
+The dashboard provides:
 
-```bash
-.venv\Scriptsctivate
-```
+Total Campaigns
 
-Install required packages:
+Average Revenue
 
-```bash
+Average ROI
+
+Average CTR
+
+Brand-wise Revenue
+
+Campaign Type Performance
+
+Target Audience Analysis
+
+Marketing Channel Usage
+
+Correlation Heatmap
+
+Dataset Preview
+
+Model Information
+
+Feature Importance
+
+🔮 Prediction
+
+Users can enter:
+
+Campaign Type
+
+Target Audience
+
+Brand
+
+Language
+
+Customer Segment
+
+Marketing Channel
+
+Duration
+
+Impressions
+
+Clicks
+
+Leads
+
+Conversions
+
+Acquisition Cost
+
+Engagement Score
+
+The application calculates derived features such as:
+
+CTR
+Conversion Rate
+Cost Per Click
+Cost Per Conversion
+Lead Conversion Rate
+
+The trained models then generate:
+
+💰 Predicted Revenue
+🎯 Profit/Loss Prediction
+📊 Prediction Confidence
+
+📊 Campaign Analytics
+
+The application provides visual analytics including:
+
+Brand-wise Revenue
+
+Campaign Type Performance
+
+Target Audience Revenue
+
+Marketing Channel Usage
+
+Correlation Heatmap
+
+Campaign Performance
+
+Marketing Funnel
+
+Revenue Prediction
+
+📥 Prediction Report
+
+The application allows users to download prediction results as a CSV file.
+
+The report contains:
+
+Campaign Type
+
+Target Audience
+
+Brand
+
+Marketing Channel
+
+Predicted Revenue
+
+Profit/Loss Prediction
+
+Prediction Confidence
+
+💡 Business Recommendations
+
+If the campaign is predicted as PROFIT
+
+Increase campaign budget.
+
+Continue targeting the selected audience.
+
+Scale successful campaigns.
+
+Use successful marketing channels.
+
+Consider similar campaigns for other brands.
+
+Monitor ROI and conversion rate.
+
+If the campaign is predicted as LOSS
+
+Review campaign strategy.
+
+Reduce acquisition cost.
+
+Improve CTR.
+
+Improve conversion rate.
+
+Test alternative marketing channels.
+
+Re-evaluate the target audience.
+
+Optimize campaign spending.
+
+🛠️ Technologies Used
+
+Programming Language
+
+Python
+
+Data Analysis
+
+Pandas
+NumPy
+
+Data Visualization
+
+Matplotlib
+Seaborn
+Plotly
+
+Machine Learning
+
+Scikit-learn
+
+Model Saving
+
+Joblib
+
+Web Application
+
+Streamlit
+
+Development Environment
+
+Visual Studio Code
+
+📦 Installation
+
+Install the required Python libraries:
+
 pip install pandas numpy scikit-learn matplotlib seaborn plotly streamlit joblib
-```
 
----
+▶️ How to Run the Project
 
-## 20. Future Enhancements
+Navigate to the project directory:
 
-- Advanced Machine Learning models
-- Better hyperparameter optimization
-- Real-time campaign monitoring
-- Marketing budget optimization
-- Cloud deployment
-- Model monitoring
-- Automatic model retraining
+cd "C:\Users\ARUNADEVI\Desktop\Data Science\Project_no_03"
 
----
+Run the Streamlit application:
 
-## 21. Conclusion
+streamlit run app.py
 
-This project provides an end-to-end Machine Learning solution for marketing campaign performance prediction.
+Open the local URL displayed by Streamlit in your web browser.
 
-The project:
+📊 Key Project Insights
 
-- Combines data from three brands
-- Cleans and analyzes the data
-- Performs feature engineering
-- Builds Regression and Classification models
-- Uses GridSearchCV
-- Evaluates model performance
-- Generates business insights
-- Provides Streamlit deployment
+The project helps identify:
 
-### Final Results
+Which brands generate higher revenue.
 
-**Best Regression Model:** Random Forest Regressor  
-**R²:** 0.908
+Which campaign types perform better.
 
-**Best Classification Model:** Random Forest Classifier  
-**Accuracy:** 96%
+Which marketing channels are frequently used.
 
----
+Which target audiences generate better results.
 
-## 22. Quick Project Summary
+The relationship between campaign spending and revenue.
 
-| Component | Details |
-|---|---|
-| Domain | Marketing Analytics |
-| Brands | Nykaa, Purplle, Tira |
-| Regression Target | Revenue |
-| Classification Target | Profit_Flag |
-| Channel Processing | Multi-Label Encoding |
-| Missing Values | Median / Mode |
-| Tuning | GridSearchCV |
-| Best Regression | Random Forest Regressor |
-| Best R² | 0.908 |
-| Best Classification | Random Forest Classifier |
-| Best Accuracy | 96% |
-| Deployment | Streamlit |
+The factors influencing campaign profitability.
+
+The importance of CTR and conversion rate.
+
+The effectiveness of different marketing campaigns.
+
+🚀 Future Enhancements
+
+The project can be further enhanced by adding:
+
+Real-time campaign data.
+
+Cloud deployment.
+
+User authentication.
+
+Automated model retraining.
+
+Advanced feature selection.
+
+XGBoost models.
+
+LightGBM models.
+
+Explainable AI using SHAP.
+
+Real-time database integration.
+
+Campaign budget optimization.
+
+Automated business reports.
+
+Real-time monitoring.
+
+Advanced recommendation systems.
+
+🎓 Learning Outcomes
+
+This project provides practical experience in:
+
+Python Programming
+
+Data Collection
+
+Data Cleaning
+
+Data Preprocessing
+
+Feature Engineering
+
+Exploratory Data Analysis
+
+Data Visualization
+
+Regression
+
+Classification
+
+Feature Selection
+
+Hyperparameter Tuning
+
+GridSearchCV
+
+Model Evaluation
+
+Model Saving
+
+Machine Learning Deployment
+
+Streamlit Application Development
+
+Business Insight Generation
+
+🧠 Project Architecture
+
+                    MARKETING DATA
+                         │
+                         ▼
+                 DATA COLLECTION
+                         │
+                         ▼
+                DATA PREPROCESSING
+                         │
+                         ▼
+                 FEATURE ENGINEERING
+                         │
+                         ▼
+                       EDA
+                         │
+                         ▼
+                  FEATURE SELECTION
+                         │
+                         ▼
+                  MODEL BUILDING
+                    /          \
+                   /            \
+                  ▼              ▼
+            REGRESSION       CLASSIFICATION
+                │                  │
+                ▼                  ▼
+          Revenue Prediction   Profit/Loss
+                │                  │
+                └────────┬─────────┘
+                         ▼
+                  MODEL EVALUATION
+                         │
+                         ▼
+                  BEST MODEL SAVING
+                         │
+                         ▼
+                  STREAMLIT APP
+                         │
+             ┌───────────┼───────────┐
+             ▼           ▼           ▼
+         Dashboard   Prediction   Analytics
+             │           │           │
+             └───────────┼───────────┘
+                         ▼
+                BUSINESS INSIGHTS
+
+📌 Project Conclusion
+
+The Multi-Brand Marketing Campaign Performance Prediction project demonstrates how Machine Learning can be used to transform marketing campaign data into meaningful business insights.
+
+The project integrates:
+
+Data Collection
+       ↓
+Data Preprocessing
+       ↓
+Feature Engineering
+       ↓
+EDA
+       ↓
+Machine Learning
+       ↓
+Model Evaluation
+       ↓
+Prediction
+       ↓
+Business Recommendation
+
+The final Streamlit application provides an interactive platform for predicting campaign revenue and profitability.
+
+The project demonstrates the practical application of Data Science and Machine Learning in the field of marketing analytics.
+
+📌 Project Status
+
+✅ Data Collection
+✅ Data Preprocessing
+✅ Feature Engineering
+✅ Exploratory Data Analysis
+✅ Feature Selection
+✅ Regression Modeling
+✅ Classification Modeling
+✅ GridSearchCV
+✅ Model Evaluation
+✅ Model Saving
+✅ Streamlit Deployment
+✅ Revenue Prediction
+✅ Profit/Loss Prediction
+✅ Prediction Confidence
+✅ Analytics Dashboard
+✅ Business Recommendations
+✅ Prediction Report Download
+
+🎉 Project Completed Successfully
+
+Multi-Brand Marketing Campaign Performance Prediction using Machine Learning and Streamlit
