@@ -1,8 +1,11 @@
 # ==========================================================
-# Streamlit Application
+# MULTI-BRAND MARKETING CAMPAIGN PERFORMANCE PREDICTION
+# STREAMLIT APPLICATION
 # ==========================================================
+
 import os
 import warnings
+
 warnings.filterwarnings("ignore")
 
 import joblib
@@ -10,1190 +13,1483 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 import plotly.express as px
-import plotly.graph_objects as go
+
 
 # ==========================================================
 # PAGE CONFIGURATION
 # ==========================================================
 
 st.set_page_config(
-
-    page_title="Marketing Campaign Performance Prediction",
-
+    page_title="Marketing Campaign Analytics",
     page_icon="📊",
-
     layout="wide"
-
 )
 
+
 # ==========================================================
-# PROJECT TITLE
+# CUSTOM CSS
 # ==========================================================
 
-st.title("📊 Multi-Brand Marketing Campaign Performance Prediction")
+st.markdown(
+    """
+    <style>
 
-st.markdown("""
-Machine Learning models Prediction
+    .main-title {
+        font-size: 38px;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 5px;
+    }
 
-- 💰 Revenue (Regression)
-- 📈 Profit / Loss (Classification)
+    .sub-title {
+        text-align: center;
+        font-size: 18px;
+        margin-bottom: 25px;
+    }
 
-""")
+    .section-title {
+        font-size: 25px;
+        font-weight: 600;
+        margin-top: 20px;
+    }
 
-st.markdown("---")
+    div[data-testid="stMetric"] {
+        border: 1px solid #dddddd;
+        padding: 15px;
+        border-radius: 12px;
+    }
+
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 
 # ==========================================================
 # PROJECT PATHS
 # ==========================================================
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(
+    os.path.abspath(__file__)
+)
 
-MODEL_DIR = os.path.join(BASE_DIR, "models")
+MODEL_DIR = os.path.join(
+    BASE_DIR,
+    "models"
+)
 
 DATA_PATH = os.path.join(
     BASE_DIR,
     "feature_engineered_marketing_campaign_data.csv"
 )
 
+REGRESSION_MODEL_PATH = os.path.join(
+    MODEL_DIR,
+    "Best_Regression_Model.pkl"
+)
+
+CLASSIFICATION_MODEL_PATH = os.path.join(
+    MODEL_DIR,
+    "Best_Classification_Model.pkl"
+)
+
+
 # ==========================================================
-# CHECK DATASET
+# CHECK REQUIRED FILES
 # ==========================================================
 
-if not os.path.exists(DATA_PATH):
+required_files = [
+    DATA_PATH,
+    REGRESSION_MODEL_PATH,
+    CLASSIFICATION_MODEL_PATH
+]
 
-    st.error("feature_engineered_marketing_campaign_data.csv not found.")
+missing_files = [
+    file
+    for file in required_files
+    if not os.path.exists(file)
+]
+
+if missing_files:
+
+    st.error(
+        "❌ Required project files are missing."
+    )
+
+    for file in missing_files:
+
+        st.write(file)
 
     st.stop()
+
 
 # ==========================================================
 # LOAD DATASET
 # ==========================================================
 
-df = pd.read_csv(DATA_PATH)
+@st.cache_data
+def load_dataset():
 
-# ==========================================================
-# CHECK MODEL FILES
-# ==========================================================
+    data = pd.read_csv(
+        DATA_PATH
+    )
 
-required_files = [
+    return data
 
-    "Best_Regression_Model.pkl",
-
-    "Best_Classification_Model.pkl",
-
-    "regression_features.pkl",
-
-    "classification_features.pkl"
-
-]
-
-missing = []
-
-for file in required_files:
-
-    if not os.path.exists(os.path.join(MODEL_DIR, file)):
-
-        missing.append(file)
-
-if len(missing) > 0:
-
-    st.error("Missing Model Files")
-
-    st.write(missing)
-
-    st.stop()
 
 # ==========================================================
 # LOAD MODELS
 # ==========================================================
 
-regression_model = joblib.load(
+@st.cache_resource
+def load_models():
 
-    os.path.join(
-
-        MODEL_DIR,
-
-        "Best_Regression_Model.pkl"
-
+    regression = joblib.load(
+        REGRESSION_MODEL_PATH
     )
 
-)
-
-classification_model = joblib.load(
-
-    os.path.join(
-
-        MODEL_DIR,
-
-        "Best_Classification_Model.pkl"
-
+    classification = joblib.load(
+        CLASSIFICATION_MODEL_PATH
     )
 
-)
+    return regression, classification
 
-regression_features = joblib.load(
 
-    os.path.join(
+# ==========================================================
+# LOAD PROJECT DATA
+# ==========================================================
 
-        MODEL_DIR,
+try:
 
-        "regression_features.pkl"
+    df = load_dataset()
 
+    (
+        regression_model,
+        classification_model
+    ) = load_models()
+
+except Exception as error:
+
+    st.error(
+        f"❌ Error loading project files: {error}"
     )
 
-)
+    st.stop()
 
-classification_features = joblib.load(
 
-    os.path.join(
+# ==========================================================
+# GET MODEL FEATURES
+# ==========================================================
 
-        MODEL_DIR,
+# We do NOT require regression_features.pkl
+# or classification_features.pkl.
 
-        "classification_features.pkl"
+if hasattr(
+    regression_model,
+    "feature_names_in_"
+):
 
+    regression_features = list(
+        regression_model.feature_names_in_
     )
 
+else:
+
+    regression_features = None
+
+
+if hasattr(
+    classification_model,
+    "feature_names_in_"
+):
+
+    classification_features = list(
+        classification_model.feature_names_in_
+    )
+
+else:
+
+    classification_features = None
+
+
+# ==========================================================
+# HEADER
+# ==========================================================
+
+st.markdown(
+    """
+    <div class="main-title">
+        📊 Multi-Brand Marketing Campaign Analytics
+    </div>
+    """,
+    unsafe_allow_html=True
 )
+
+st.markdown(
+    """
+    <div class="sub-title">
+        Machine Learning Based Revenue & Profitability Prediction
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
 
 # ==========================================================
 # SIDEBAR
 # ==========================================================
 
-st.sidebar.title("Navigation")
+st.sidebar.title("📌 Navigation")
 
 page = st.sidebar.radio(
-
-    "Select Page",
-
+    "Choose a Page",
     [
-
-        "Prediction",
-
-        "Dataset Summary",
-
-        "About"
-
+        "🏠 Dashboard",
+        "🔮 Prediction",
+        "ℹ️ About"
     ]
-
 )
 
-# ==========================================================
-# DATASET SUMMARY
-# ==========================================================
-
-if page == "Dataset Summary":
-
-    st.header("Dataset Summary")
-
-    st.write("Shape :", df.shape)
-
-    st.dataframe(df.head())
-
-    st.subheader("Columns")
-
-    st.write(df.columns.tolist())
-
-    st.stop()
 
 # ==========================================================
-# ABOUT
+# ==========================================================
+# DASHBOARD PAGE
+# ==========================================================
 # ==========================================================
 
-if page == "About":
+if page == "🏠 Dashboard":
 
-    st.header("Project Information")
-
-    st.markdown("""
-
-### Project
-
-Multi-Brand Marketing Campaign Performance Prediction
-
-### Regression Models
-
-- Linear Regression
-
-- Decision Tree Regressor
-
-- Random Forest Regressor
-
-### Classification Models
-
-- Logistic Regression
-
-- Decision Tree Classifier
-
-- Random Forest Classifier
-
-### Outputs
-
-- Revenue Prediction
-
-- Profit / Loss Prediction
-
-""")
-
-    st.stop()
-
-# ==========================================================
-# PREDICTION PAGE
-# ==========================================================
-
-st.header("Campaign Details")
-
-left, right = st.columns(2)
-
-# ==========================================================
-# INPUT FORM
-# ==========================================================
-
-with left:
-
-    campaign_type = st.selectbox(
-
-        "Campaign Type",
-
-        sorted(df["Campaign_Type"].dropna().unique())
-
+    st.header(
+        "📈 Campaign Performance Dashboard"
     )
 
-    target_audience = st.selectbox(
-
-        "Target Audience",
-
-        sorted(df["Target_Audience"].dropna().unique())
-
-    )
-
-    brand = st.selectbox(
-
-        "Brand",
-
-        sorted(df["Brand"].dropna().unique())
-
-    )
-
-    language = st.selectbox(
-
-        "Language",
-
-        sorted(df["Language"].dropna().unique())
-
-    )
-
-    customer_segment = st.selectbox(
-
-        "Customer Segment",
-
-        sorted(df["Customer_Segment"].dropna().unique())
-
-    )
-
-    selected_channel = st.selectbox(
-
-        "Marketing Channel",
-
-        [
-
-            "Email",
-
-            "Facebook",
-
-            "Google",
-
-            "Instagram",
-
-            "Whatsapp",
-
-            "Youtube"
-
-        ]
-
-    )
-
-with right:
-
-    duration = st.number_input(
-
-        "Duration (Days)",
-
-        min_value=1,
-
-        max_value=365,
-
-        value=30
-
-    )
-
-    impressions = st.number_input(
-
-        "Impressions",
-
-        min_value=0,
-
-        value=10000
-
-    )
-
-    clicks = st.number_input(
-
-        "Clicks",
-
-        min_value=0,
-
-        value=500
-
-    )
-
-    leads = st.number_input(
-
-        "Leads",
-
-        min_value=0,
-
-        value=100
-
-    )
-
-    conversions = st.number_input(
-
-        "Conversions",
-
-        min_value=0,
-
-        value=50
-
-    )
-
-    acquisition_cost = st.number_input(
-
-        "Acquisition Cost",
-
-        min_value=0.0,
-
-        value=10000.0
-
-    )
-
-    engagement_score = st.number_input(
-
-        "Engagement Score",
-
-        min_value=0.0,
-
-        max_value=100.0,
-
-        value=50.0
-
-    )
-
-# ==========================================================
-# PREDICT BUTTON
-# ==========================================================
-
-st.markdown("---")
-
-predict_button = st.button(
-
-    "Predict Campaign Performance",
-
-    use_container_width=True
-
-)
-
-# ==========================================================
-# CREATE INPUT DATA
-# ==========================================================
-
-if predict_button:
-
-    # -----------------------------
-    # Calculate Derived Features
-    # -----------------------------
-
-    ctr = (clicks / impressions * 100) if impressions > 0 else 0
-
-    conversion_rate = (conversions / clicks * 100) if clicks > 0 else 0
-
-    cost_per_click = (acquisition_cost / clicks) if clicks > 0 else 0
-
-    cost_per_conversion = (acquisition_cost / conversions) if conversions > 0 else 0
-
-    lead_conversion_rate = (conversions / leads * 100) if leads > 0 else 0
-
-    # -----------------------------
-    # Input Dictionary
-    # -----------------------------
-
-    input_dict = {
-
-        "Campaign_Type": campaign_type,
-
-        "Target_Audience": target_audience,
-
-        "Brand": brand,
-
-        "Duration": duration,
-
-        "Impressions": impressions,
-
-        "Clicks": clicks,
-
-        "Leads": leads,
-
-        "Conversions": conversions,
-
-        "Acquisition_Cost": acquisition_cost,
-
-        "Language": language,
-
-        "Engagement_Score": engagement_score,
-
-        "Customer_Segment": customer_segment,
-
-        "CTR": ctr,
-
-        "Conversion_Rate": conversion_rate,
-
-        "Cost_Per_Click": cost_per_click,
-
-        "Cost_Per_Conversion": cost_per_conversion,
-
-        "Lead_Conversion_Rate": lead_conversion_rate,
-
-        "Channel_Email": 0,
-
-        "Channel_Facebook": 0,
-
-        "Channel_Google": 0,
-
-        "Channel_Instagram": 0,
-
-        "Channel_Whatsapp": 0,
-
-        "Channel_Youtube": 0
-
-    }
-
-    # -----------------------------
-    # Encode Selected Channel
-    # -----------------------------
-
-    channel_column = f"Channel_{selected_channel}"
-
-    if channel_column in input_dict:
-
-        input_dict[channel_column] = 1
-
-    # -----------------------------
-    # Create DataFrame
-    # -----------------------------
-
-    input_data = pd.DataFrame([input_dict])
-
-    st.subheader("Input Data")
-
-    st.dataframe(input_data)
-
-# ==========================================================
-# PREPROCESS INPUT DATA
-# ==========================================================
-
-    # One-Hot Encoding
-    input_encoded = pd.get_dummies(input_data)
 
     # ======================================================
-    # ALIGN REGRESSION FEATURES
+    # KPI VALUES
     # ======================================================
 
-    regression_input = pd.DataFrame(
-        columns=regression_features,
-        index=[0]
-    )
+    total_campaigns = len(df)
 
-    regression_input = regression_input.fillna(0)
 
-    for col in input_encoded.columns:
+    if "Revenue" in df.columns:
 
-        if col in regression_features:
+        total_revenue = df[
+            "Revenue"
+        ].sum()
 
-            regression_input.loc[0, col] = input_encoded.loc[0, col]
+        average_revenue = df[
+            "Revenue"
+        ].mean()
 
-    # ======================================================
-    # ALIGN CLASSIFICATION FEATURES
-    # ======================================================
+    else:
 
-    classification_input = pd.DataFrame(
-        columns=classification_features,
-        index=[0]
-    )
+        total_revenue = 0
 
-    classification_input = classification_input.fillna(0)
+        average_revenue = 0
 
-    for col in input_encoded.columns:
 
-        if col in classification_features:
+    if "ROI" in df.columns:
 
-            classification_input.loc[0, col] = input_encoded.loc[0, col]
+        average_roi = df[
+            "ROI"
+        ].mean()
 
-    # ======================================================
-    # CONVERT NUMERIC COLUMNS
-    # ======================================================
+    else:
 
-    regression_input = regression_input.apply(
-        pd.to_numeric,
-        errors="coerce"
-    ).fillna(0)
+        average_roi = 0
 
-    classification_input = classification_input.apply(
-        pd.to_numeric,
-        errors="coerce"
-    ).fillna(0)
 
-    # ======================================================
-    # DISPLAY MODEL INPUT (Optional)
-    # ======================================================
+    if "CTR" in df.columns:
 
-    with st.expander("Model Input Features"):
+        average_ctr = df[
+            "CTR"
+        ].mean()
 
-        st.dataframe(regression_input)
+    else:
 
-    # ======================================================
-    # REVENUE PREDICTION
-    # ======================================================
+        average_ctr = 0
 
-    predicted_revenue = regression_model.predict(
-        regression_input
-    )[0]
-
-    # ======================================================
-    # PROFIT / LOSS PREDICTION
-    # ======================================================
-
-    predicted_profit = classification_model.predict(
-        classification_input
-    )[0]
-
-    # ======================================================
-    # PREDICTION CONFIDENCE
-    # ======================================================
-
-    confidence = None
-
-    if hasattr(classification_model, "predict_proba"):
-
-        confidence = (
-            classification_model.predict_proba(
-                classification_input
-            )[0].max() * 100
-        )
-
-    # ======================================================
-    # CREATE RESULT DICTIONARY
-    # ======================================================
-
-    prediction_result = {
-
-        "Predicted Revenue": float(predicted_revenue),
-
-        "Prediction": (
-            "Profit"
-            if predicted_profit == 1
-            else "Loss"
-        ),
-
-        "Confidence": confidence
-
-    }
-
-# ==========================================================
-# DISPLAY PREDICTION RESULTS
-# ==========================================================
-
-    st.markdown("---")
-    st.header("Prediction Results")
 
     # ======================================================
     # KPI CARDS
     # ======================================================
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
+
 
     with col1:
+
         st.metric(
-            label="💰 Predicted Revenue",
-            value=f"₹ {predicted_revenue:,.2f}"
+            "📋 Total Campaigns",
+            f"{total_campaigns:,}"
         )
 
+
     with col2:
-        if predicted_profit == 1:
-            st.success("✅ Campaign Status : PROFIT")
-        else:
-            st.error("❌ Campaign Status : LOSS")
+
+        st.metric(
+            "💰 Total Revenue",
+            f"₹ {total_revenue:,.0f}"
+        )
+
 
     with col3:
-        if confidence is not None:
-            st.metric(
-                label="🎯 Confidence",
-                value=f"{confidence:.2f}%"
+
+        st.metric(
+            "📊 Average Revenue",
+            f"₹ {average_revenue:,.0f}"
+        )
+
+
+    with col4:
+
+        st.metric(
+            "📈 Average ROI",
+            f"{average_roi:.2f}"
+        )
+
+
+    st.divider()
+
+
+    # ======================================================
+    # BRAND PERFORMANCE
+    # ======================================================
+
+    st.subheader(
+        "🏆 Brand-wise Revenue"
+    )
+
+
+    if (
+        "Brand" in df.columns
+        and "Revenue" in df.columns
+    ):
+
+        brand_df = (
+            df.groupby(
+                "Brand"
+            )["Revenue"]
+            .mean()
+            .reset_index()
+            .sort_values(
+                "Revenue",
+                ascending=False
             )
-        else:
-            st.metric(
-                label="🎯 Confidence",
-                value="N/A"
+        )
+
+
+        fig = px.bar(
+            brand_df,
+            x="Brand",
+            y="Revenue",
+            text_auto=".2s",
+            title="Average Revenue by Brand"
+        )
+
+
+        st.plotly_chart(
+            fig,
+            use_container_width=True
+        )
+
+
+    # ======================================================
+    # CAMPAIGN TYPE + TARGET AUDIENCE
+    # ======================================================
+
+    left, right = st.columns(2)
+
+
+    # ------------------------------------------------------
+    # CAMPAIGN TYPE
+    # ------------------------------------------------------
+
+    with left:
+
+        st.subheader(
+            "🎯 Campaign Type Performance"
+        )
+
+
+        if (
+            "Campaign_Type" in df.columns
+            and "Revenue" in df.columns
+        ):
+
+            campaign_df = (
+                df.groupby(
+                    "Campaign_Type"
+                )["Revenue"]
+                .mean()
+                .reset_index()
+                .sort_values(
+                    "Revenue",
+                    ascending=False
+                )
             )
 
-    st.markdown("---")
+
+            fig = px.bar(
+                campaign_df,
+                x="Campaign_Type",
+                y="Revenue",
+                text_auto=".2s",
+                title="Average Revenue"
+            )
+
+
+            st.plotly_chart(
+                fig,
+                use_container_width=True
+            )
+
+
+    # ------------------------------------------------------
+    # TARGET AUDIENCE
+    # ------------------------------------------------------
+
+    with right:
+
+        st.subheader(
+            "👥 Target Audience"
+        )
+
+
+        if (
+            "Target_Audience" in df.columns
+            and "Revenue" in df.columns
+        ):
+
+            audience_df = (
+                df.groupby(
+                    "Target_Audience"
+                )["Revenue"]
+                .mean()
+                .reset_index()
+            )
+
+
+            fig = px.pie(
+                audience_df,
+                names="Target_Audience",
+                values="Revenue",
+                hole=0.45,
+                title="Revenue Distribution"
+            )
+
+
+            st.plotly_chart(
+                fig,
+                use_container_width=True
+            )
+
 
     # ======================================================
-    # CAMPAIGN SUMMARY
+    # CHANNEL ANALYSIS
     # ======================================================
 
-    st.subheader("Campaign Summary")
-
-    summary_df = pd.DataFrame({
-
-        "Feature":[
-            "Campaign Type",
-            "Target Audience",
-            "Brand",
-            "Marketing Channel",
-            "Duration",
-            "Impressions",
-            "Clicks",
-            "Leads",
-            "Conversions",
-            "Acquisition Cost",
-            "Language",
-            "Customer Segment",
-            "Engagement Score",
-            "CTR (%)",
-            "Conversion Rate (%)",
-            "Cost Per Click",
-            "Cost Per Conversion",
-            "Lead Conversion Rate (%)"
-        ],
-
-        "Value":[
-            campaign_type,
-            target_audience,
-            brand,
-            selected_channel,
-            duration,
-            impressions,
-            clicks,
-            leads,
-            conversions,
-            acquisition_cost,
-            language,
-            customer_segment,
-            engagement_score,
-            round(ctr,2),
-            round(conversion_rate,2),
-            round(cost_per_click,2),
-            round(cost_per_conversion,2),
-            round(lead_conversion_rate,2)
-        ]
-
-    })
-
-    st.dataframe(summary_df, use_container_width=True)
-
-    # ======================================================
-    # REVENUE BAR CHART
-    # ======================================================
-
-    st.subheader("Revenue Prediction")
-
-    revenue_df = pd.DataFrame({
-
-        "Category":["Predicted Revenue"],
-
-        "Revenue":[predicted_revenue]
-
-    })
-
-    fig1 = px.bar(
-
-        revenue_df,
-
-        x="Category",
-
-        y="Revenue",
-
-        text="Revenue",
-
-        title="Predicted Revenue"
-
+    st.subheader(
+        "📣 Marketing Channel Usage"
     )
 
-    fig1.update_traces(texttemplate="₹ %{y:,.0f}")
 
-    st.plotly_chart(fig1, width="stretch")
+    channel_columns = [
+        "Channel_Email",
+        "Channel_Facebook",
+        "Channel_Google",
+        "Channel_Instagram",
+        "Channel_Whatsapp",
+        "Channel_Youtube"
+    ]
 
-    # ======================================================
-    # CAMPAIGN PERFORMANCE
-    # ======================================================
 
-    chart_df = pd.DataFrame({
-
-        "Metric":[
-
-            "Impressions",
-
-            "Clicks",
-
-            "Leads",
-
-            "Conversions"
-
-        ],
-
-        "Value":[
-
-            impressions,
-
-            clicks,
-
-            leads,
-
-            conversions
-
-        ]
-
-    })
-
-    fig2 = px.bar(
-
-        chart_df,
-
-        x="Metric",
-
-        y="Value",
-
-        text="Value",
-
-        title="Campaign Performance"
-
-    )
-
-    fig2.update_traces(textposition="outside")
-
-    st.plotly_chart(fig2, width="stretch")
-
-    # ======================================================
-    # CONVERSION FUNNEL
-    # ======================================================
-
-    funnel_df = pd.DataFrame({
-
-        "Stage":[
-
-            "Impressions",
-
-            "Clicks",
-
-            "Leads",
-
-            "Conversions"
-
-        ],
-
-        "Count":[
-
-            impressions,
-
-            clicks,
-
-            leads,
-
-            conversions
-
-        ]
-
-    })
-
-    fig3 = px.funnel(
-
-        funnel_df,
-
-        x="Count",
-
-        y="Stage",
-
-        title="Marketing Funnel"
-
-    )
-
-    st.plotly_chart(fig3, width="stretch")
-
-    # ======================================================
-    # PIE CHART
-    # ======================================================
-
-    pie_df = pd.DataFrame({
-
-        "Stage":[
-
-            "Clicks",
-
-            "Leads",
-
-            "Conversions"
-
-        ],
-
-        "Count":[
-
-            clicks,
-
-            leads,
-
-            conversions
-
-        ]
-
-    })
-
-    fig4 = px.pie(
-
-        pie_df,
-
-        names="Stage",
-
-        values="Count",
-
-        hole=0.45,
-
-        title="Campaign Distribution"
-
-    )
-
-    st.plotly_chart(fig4, width="stretch")
-
-    # ======================================================
-    # DOWNLOAD RESULTS
-    # ======================================================
-
-    result_df = pd.DataFrame({
-
-        "Campaign Type":[campaign_type],
-        "Target Audience":[target_audience],
-        "Brand":[brand],
-        "Channel":[selected_channel],
-        "Predicted Revenue":[predicted_revenue],
-        "Prediction":[
-            "Profit" if predicted_profit==1 else "Loss"
-        ],
-        "Confidence":[confidence]
-
-    })
-
-    csv = result_df.to_csv(index=False)
-
-    st.download_button(
-
-        label="📥 Download Prediction Report",
-
-        data=csv,
-
-        file_name="Prediction_Report.csv",
-
-        mime="text/csv"
-
-    )
-
-    # ======================================================
-    # BUSINESS RECOMMENDATIONS
-    # ======================================================
-
-    st.markdown("---")
-
-    st.subheader("Business Recommendations")
-
-    if predicted_profit == 1:
-
-        st.success("""
-- Increase budget for similar campaigns.
-- Continue targeting this audience.
-- Use this marketing channel in future campaigns.
-- Scale this campaign across other brands.
-""")
-
-    else:
-
-        st.warning("""
-- Review campaign strategy.
-- Reduce acquisition cost.
-- Improve CTR and conversion rate.
-- Consider testing a different marketing channel.
-""")
-
-# ==========================================================
-# ANALYTICS DASHBOARD
-# ==========================================================
-if page == "Dataset Summary":
-
-    st.markdown("---")
-
-st.header("📈 Campaign Analytics Dashboard")
-
-# ==========================================================
-# KPI SUMMARY
-# ==========================================================
-
-col1, col2, col3, col4 = st.columns(4)
-
-with col1:
-    st.metric(
-        "Total Campaigns",
-        len(df)
-    )
-
-with col2:
-    st.metric(
-        "Average Revenue",
-        f"₹ {df['Revenue'].mean():,.0f}"
-    )
-
-with col3:
-    st.metric(
-        "Average ROI",
-        f"{df['ROI'].mean():.2f}"
-    )
-
-with col4:
-    st.metric(
-        "Average CTR",
-        f"{df['CTR'].mean():.2f}%"
-    )
-
-# ==========================================================
-# BRAND ANALYSIS
-# ==========================================================
-
-st.subheader("🏆 Brand-wise Revenue")
-
-brand_df = (
-    df.groupby("Brand")["Revenue"]
-    .mean()
-    .reset_index()
-)
-
-fig = px.bar(
-    brand_df,
-    x="Brand",
-    y="Revenue",
-    color="Brand",
-    text_auto=".2s",
-    title="Average Revenue by Brand"
-)
-
-st.plotly_chart(fig, use_container_width=True)
-
-# ==========================================================
-# CAMPAIGN TYPE ANALYSIS
-# ==========================================================
-
-st.subheader("Campaign Type Performance")
-
-campaign_df = (
-    df.groupby("Campaign_Type")["Revenue"]
-    .mean()
-    .reset_index()
-)
-
-fig = px.bar(
-    campaign_df,
-    x="Campaign_Type",
-    y="Revenue",
-    color="Campaign_Type",
-    text_auto=".2s"
-)
-
-st.plotly_chart(fig, use_container_width=True)
-
-# ==========================================================
-# TARGET AUDIENCE
-# ==========================================================
-
-st.subheader("Target Audience Revenue")
-
-aud_df = (
-    df.groupby("Target_Audience")["Revenue"]
-    .mean()
-    .reset_index()
-)
-
-fig = px.pie(
-    aud_df,
-    names="Target_Audience",
-    values="Revenue",
-    hole=0.45
-)
-
-st.plotly_chart(fig, use_container_width=True)
-
-# ==========================================================
-# CHANNEL ANALYSIS
-# ==========================================================
-
-st.subheader("Marketing Channel Usage")
-
-channel_columns = [
-
-    "Channel_Email",
-    "Channel_Facebook",
-    "Channel_Google",
-    "Channel_Instagram",
-    "Channel_Whatsapp",
-    "Channel_Youtube"
-
-]
-
-channel_counts = []
-
-for c in channel_columns:
-
-    if c in df.columns:
-
-        channel_counts.append(df[c].sum())
-
-    else:
-
-        channel_counts.append(0)
-
-channel_df = pd.DataFrame({
-
-    "Channel":[
+    channel_names = [
         "Email",
         "Facebook",
         "Google",
         "Instagram",
         "Whatsapp",
         "Youtube"
-    ],
-
-    "Campaigns":channel_counts
-
-})
-
-fig = px.bar(
-
-    channel_df,
-
-    x="Channel",
-
-    y="Campaigns",
-
-    color="Channel",
-
-    text_auto=True
-
-)
-
-st.plotly_chart(fig, use_container_width=True)
-
-# ==========================================================
-# CORRELATION MATRIX
-# ==========================================================
-
-st.subheader("Correlation Heatmap")
-
-numeric_df = df.select_dtypes(include=np.number)
-
-corr = numeric_df.corr()
-
-fig = px.imshow(
-
-    corr,
-
-    text_auto=".2f",
-
-    aspect="auto",
-
-    color_continuous_scale="Viridis"
-
-)
-
-st.plotly_chart(fig, use_container_width=True)
-
-# ==========================================================
-# DATA PREVIEW
-# ==========================================================
-
-st.subheader("Dataset Preview")
-
-st.dataframe(df.head(20), use_container_width=True)
-
-# ==========================================================
-# MODEL INFORMATION
-# ==========================================================
-
-st.subheader("Model Information")
-
-info = pd.DataFrame({
-
-    "Task":[
-        "Regression",
-        "Classification"
-    ],
-
-    "Model":[
-        type(regression_model).__name__,
-        type(classification_model).__name__
     ]
 
-})
 
-st.table(info)
+    channel_counts = []
 
-# ==========================================================
-# FEATURE IMPORTANCE
-# ==========================================================
 
-if hasattr(regression_model, "feature_importances_"):
+    for column in channel_columns:
 
-    st.subheader("Regression Feature Importance")
+        if column in df.columns:
 
-    importance = pd.DataFrame({
+            channel_counts.append(
+                df[column].sum()
+            )
 
-        "Feature": regression_features,
+        else:
 
-        "Importance": regression_model.feature_importances_
+            channel_counts.append(0)
+
+
+    channel_df = pd.DataFrame({
+
+        "Channel": channel_names,
+
+        "Campaigns": channel_counts
 
     })
 
-    importance = importance.sort_values(
-
-        "Importance",
-
-        ascending=False
-
-    ).head(10)
 
     fig = px.bar(
-
-        importance,
-
-        x="Importance",
-
-        y="Feature",
-
-        orientation="h",
-
-        title="Top 10 Important Features"
-
+        channel_df,
+        x="Channel",
+        y="Campaigns",
+        text_auto=True,
+        title="Number of Campaigns by Channel"
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )
+
+
+# ==========================================================
+# ==========================================================
+# PREDICTION PAGE
+# ==========================================================
+# ==========================================================
+
+elif page == "🔮 Prediction":
+
+    st.header(
+        "🔮 Campaign Performance Prediction"
+    )
+
+
+    st.info(
+        "Enter campaign details to predict Revenue "
+        "and Profit/Loss."
+    )
+
+
+    # ======================================================
+    # INPUT SECTION
+    # ======================================================
+
+    st.subheader(
+        "📝 Campaign Details"
+    )
+
+
+    left, right = st.columns(2)
+
+
+    # ======================================================
+    # LEFT SIDE
+    # ======================================================
+
+    with left:
+
+
+        campaign_type = st.selectbox(
+            "Campaign Type",
+            sorted(
+                df[
+                    "Campaign_Type"
+                ]
+                .dropna()
+                .unique()
+            )
+        )
+
+
+        target_audience = st.selectbox(
+            "Target Audience",
+            sorted(
+                df[
+                    "Target_Audience"
+                ]
+                .dropna()
+                .unique()
+            )
+        )
+
+
+        brand = st.selectbox(
+            "Brand",
+            sorted(
+                df[
+                    "Brand"
+                ]
+                .dropna()
+                .unique()
+            )
+        )
+
+
+        language = st.selectbox(
+            "Language",
+            sorted(
+                df[
+                    "Language"
+                ]
+                .dropna()
+                .unique()
+            )
+        )
+
+
+        customer_segment = st.selectbox(
+            "Customer Segment",
+            sorted(
+                df[
+                    "Customer_Segment"
+                ]
+                .dropna()
+                .unique()
+            )
+        )
+
+
+        selected_channel = st.selectbox(
+            "Marketing Channel",
+            [
+                "Email",
+                "Facebook",
+                "Google",
+                "Instagram",
+                "Whatsapp",
+                "Youtube"
+            ]
+        )
+
+
+    # ======================================================
+    # RIGHT SIDE
+    # ======================================================
+
+    with right:
+
+
+        duration = st.number_input(
+            "Duration (Days)",
+            min_value=1,
+            max_value=365,
+            value=30
+        )
+
+
+        impressions = st.number_input(
+            "Impressions",
+            min_value=0,
+            value=10000
+        )
+
+
+        clicks = st.number_input(
+            "Clicks",
+            min_value=0,
+            value=500
+        )
+
+
+        leads = st.number_input(
+            "Leads",
+            min_value=0,
+            value=100
+        )
+
+
+        conversions = st.number_input(
+            "Conversions",
+            min_value=0,
+            value=50
+        )
+
+
+        acquisition_cost = st.number_input(
+            "Acquisition Cost",
+            min_value=0.0,
+            value=10000.0
+        )
+
+
+        engagement_score = st.number_input(
+            "Engagement Score",
+            min_value=0.0,
+            max_value=100.0,
+            value=50.0
+        )
+
+
+    st.divider()
+
+
+    # ======================================================
+    # PREDICT BUTTON
+    # ======================================================
+
+    predict_button = st.button(
+        "🚀 Predict Campaign Performance",
+        use_container_width=True
+    )
+
+
+    # ======================================================
+    # WHEN BUTTON CLICKED
+    # ======================================================
+
+    if predict_button:
+
+        # ==================================================
+        # DERIVED FEATURES
+        # ==================================================
+
+        ctr = (
+            clicks / impressions * 100
+            if impressions > 0
+            else 0
+        )
+
+
+        conversion_rate = (
+            conversions / clicks * 100
+            if clicks > 0
+            else 0
+        )
+
+
+        cost_per_click = (
+            acquisition_cost / clicks
+            if clicks > 0
+            else 0
+        )
+
+
+        cost_per_conversion = (
+            acquisition_cost / conversions
+            if conversions > 0
+            else 0
+        )
+
+
+        lead_conversion_rate = (
+            conversions / leads * 100
+            if leads > 0
+            else 0
+        )
+
+
+        # ==================================================
+        # CREATE INPUT DICTIONARY
+        # ==================================================
+
+        input_dict = {
+
+            "Campaign_Type":
+                campaign_type,
+
+            "Target_Audience":
+                target_audience,
+
+            "Brand":
+                brand,
+
+            "Duration":
+                duration,
+
+            "Impressions":
+                impressions,
+
+            "Clicks":
+                clicks,
+
+            "Leads":
+                leads,
+
+            "Conversions":
+                conversions,
+
+            "Acquisition_Cost":
+                acquisition_cost,
+
+            "Language":
+                language,
+
+            "Engagement_Score":
+                engagement_score,
+
+            "Customer_Segment":
+                customer_segment,
+
+            "CTR":
+                ctr,
+
+            "Conversion_Rate":
+                conversion_rate,
+
+            "Cost_Per_Click":
+                cost_per_click,
+
+            "Cost_Per_Conversion":
+                cost_per_conversion,
+
+            "Lead_Conversion_Rate":
+                lead_conversion_rate,
+
+            "Channel_Email":
+                0,
+
+            "Channel_Facebook":
+                0,
+
+            "Channel_Google":
+                0,
+
+            "Channel_Instagram":
+                0,
+
+            "Channel_Whatsapp":
+                0,
+
+            "Channel_Youtube":
+                0
+
+        }
+
+
+        # ==================================================
+        # CHANNEL ENCODING
+        # ==================================================
+
+        channel_column = (
+            "Channel_"
+            + selected_channel
+        )
+
+
+        if channel_column in input_dict:
+
+            input_dict[
+                channel_column
+            ] = 1
+
+
+        # ==================================================
+        # CREATE INPUT DATAFRAME
+        # ==================================================
+
+        input_data = pd.DataFrame(
+            [input_dict]
+        )
+
+
+        # ==================================================
+        # ONE HOT ENCODING
+        # ==================================================
+
+        input_encoded = pd.get_dummies(
+            input_data
+        )
+
+
+        # ==================================================
+        # CHECK MODEL FEATURES
+        # ==================================================
+
+        if (
+            regression_features is None
+            or classification_features is None
+        ):
+
+            st.error(
+                """
+                ❌ The saved models do not contain
+                feature_names_in_.
+
+                The model feature information is required
+                to correctly prepare the prediction input.
+
+                Please save the trained model together with
+                its feature names in Step 5.
+                """
+            )
+
+            st.stop()
+
+        # ==========================================================
+        # REGRESSION INPUT
+        # ==========================================================
+
+        regression_input = pd.DataFrame(
+            0.0,
+            index=[0],
+            columns=regression_features,
+            dtype=float
+        )
+
+        for column in input_encoded.columns:
+            if column in regression_features:
+                regression_input.loc[0, column] = float(
+                    input_encoded.loc[0, column]
+                )
+
+
+        # ==========================================================
+        # CLASSIFICATION INPUT
+        # ==========================================================
+
+        classification_input = pd.DataFrame(
+            0.0,
+            index=[0],
+            columns=classification_features,
+            dtype=float
+        )
+
+        for column in input_encoded.columns:
+            if column in classification_features:
+                classification_input.loc[0, column] = float(
+                    input_encoded.loc[0, column]
+                )
+
+
+        # ==========================================================
+        # FINAL NUMERIC CONVERSION
+        # ==========================================================
+
+        regression_input = (
+            regression_input
+            .apply(pd.to_numeric, errors="coerce")
+            .fillna(0.0)
+            .astype(float)
+        )
+
+        classification_input = (
+            classification_input
+            .apply(pd.to_numeric, errors="coerce")
+            .fillna(0.0)
+            .astype(float)
+        )
+
+        # ==================================================
+        # MODEL PREDICTION
+        # ==================================================
+
+        try:
+
+            predicted_revenue = (
+                regression_model
+                .predict(
+                    regression_input
+                )[0]
+            )
+
+
+            predicted_profit = (
+                classification_model
+                .predict(
+                    classification_input
+                )[0]
+            )
+
+
+            # ==================================================
+            # CONFIDENCE
+            # ==================================================
+
+            confidence = None
+
+
+            if hasattr(
+                classification_model,
+                "predict_proba"
+            ):
+
+                confidence = (
+                    classification_model
+                    .predict_proba(
+                        classification_input
+                    )[0]
+                    .max()
+                    * 100
+                )
+
+
+            # ==================================================
+            # RESULTS
+            # ==================================================
+
+            st.divider()
+
+
+            st.header(
+                "🎯 Prediction Results"
+            )
+
+
+            result1, result2, result3 = (
+                st.columns(3)
+            )
+
+
+            # --------------------------------------------------
+            # REVENUE
+            # --------------------------------------------------
+
+            with result1:
+
+                st.metric(
+                    "💰 Predicted Revenue",
+                    f"₹ {predicted_revenue:,.2f}"
+                )
+
+
+            # --------------------------------------------------
+            # PROFIT / LOSS
+            # --------------------------------------------------
+
+            with result2:
+
+                if predicted_profit == 1:
+
+                    st.success(
+                        "🟢 PROFIT"
+                    )
+
+                else:
+
+                    st.error(
+                        "🔴 LOSS"
+                    )
+
+
+            # --------------------------------------------------
+            # CONFIDENCE
+            # --------------------------------------------------
+
+            with result3:
+
+                if confidence is not None:
+
+                    st.metric(
+                        "🎯 Confidence",
+                        f"{confidence:.2f}%"
+                    )
+
+                else:
+
+                    st.metric(
+                        "🎯 Confidence",
+                        "N/A"
+                    )
+
+
+            # ==================================================
+            # CAMPAIGN METRICS
+            # ==================================================
+
+            st.subheader(
+                "📊 Campaign Performance"
+            )
+
+
+            metric_df = pd.DataFrame({
+
+                "Metric": [
+                    "Impressions",
+                    "Clicks",
+                    "Leads",
+                    "Conversions"
+                ],
+
+                "Value": [
+                    impressions,
+                    clicks,
+                    leads,
+                    conversions
+                ]
+
+            })
+
+
+            fig = px.bar(
+                metric_df,
+                x="Metric",
+                y="Value",
+                text_auto=True,
+                title="Campaign Funnel Metrics"
+            )
+
+
+            st.plotly_chart(
+                fig,
+                use_container_width=True
+            )
+
+
+            # ==================================================
+            # MARKETING FUNNEL
+            # ==================================================
+
+            st.subheader(
+                "🔻 Marketing Funnel"
+            )
+
+
+            funnel_df = pd.DataFrame({
+
+                "Stage": [
+                    "Impressions",
+                    "Clicks",
+                    "Leads",
+                    "Conversions"
+                ],
+
+                "Count": [
+                    impressions,
+                    clicks,
+                    leads,
+                    conversions
+                ]
+
+            })
+
+
+            fig = px.funnel(
+                funnel_df,
+                x="Count",
+                y="Stage",
+                title="Campaign Conversion Funnel"
+            )
+
+
+            st.plotly_chart(
+                fig,
+                use_container_width=True
+            )
+
+
+            # ==================================================
+            # CAMPAIGN SUMMARY
+            # ==================================================
+
+            st.subheader(
+                "📋 Campaign Summary"
+            )
+
+
+            summary_df = pd.DataFrame({
+
+                "Feature": [
+
+                    "Campaign Type",
+
+                    "Target Audience",
+
+                    "Brand",
+
+                    "Marketing Channel",
+
+                    "Duration",
+
+                    "Impressions",
+
+                    "Clicks",
+
+                    "Leads",
+
+                    "Conversions",
+
+                    "Acquisition Cost",
+
+                    "Language",
+
+                    "Customer Segment",
+
+                    "Engagement Score",
+
+                    "CTR (%)",
+
+                    "Conversion Rate (%)",
+
+                    "Cost Per Click",
+
+                    "Cost Per Conversion",
+
+                    "Lead Conversion Rate (%)"
+
+                ],
+
+                "Value": [
+
+                    campaign_type,
+
+                    target_audience,
+
+                    brand,
+
+                    selected_channel,
+
+                    duration,
+
+                    impressions,
+
+                    clicks,
+
+                    leads,
+
+                    conversions,
+
+                    acquisition_cost,
+
+                    language,
+
+                    customer_segment,
+
+                    engagement_score,
+
+                    round(
+                        ctr,
+                        2
+                    ),
+
+                    round(
+                        conversion_rate,
+                        2
+                    ),
+
+                    round(
+                        cost_per_click,
+                        2
+                    ),
+
+                    round(
+                        cost_per_conversion,
+                        2
+                    ),
+
+                    round(
+                        lead_conversion_rate,
+                        2
+                    )
+
+                ]
+
+            })
+
+
+            st.dataframe(
+                summary_df,
+                use_container_width=True,
+                hide_index=True
+            )
+
+
+            # ==================================================
+            # BUSINESS RECOMMENDATION
+            # ==================================================
+
+            st.subheader(
+                "💡 Business Recommendation"
+            )
+
+
+            if predicted_profit == 1:
+
+                st.success(
+                    """
+                    **Recommended Action**
+
+                    • Continue the campaign strategy.
+
+                    • Consider increasing the marketing budget.
+
+                    • Focus on the selected target audience.
+
+                    • Scale successful campaigns to other brands.
+
+                    • Continue monitoring ROI and conversion rate.
+                    """
+                )
+
+            else:
+
+                st.warning(
+                    """
+                    **Recommended Action**
+
+                    • Review the campaign strategy.
+
+                    • Reduce acquisition cost.
+
+                    • Improve CTR and conversion rate.
+
+                    • Test alternative marketing channels.
+
+                    • Re-evaluate the target audience.
+                    """
+                )
+
+
+            # ==================================================
+            # DOWNLOAD REPORT
+            # ==================================================
+
+            result_df = pd.DataFrame({
+
+                "Campaign Type": [
+                    campaign_type
+                ],
+
+                "Target Audience": [
+                    target_audience
+                ],
+
+                "Brand": [
+                    brand
+                ],
+
+                "Channel": [
+                    selected_channel
+                ],
+
+                "Predicted Revenue": [
+                    predicted_revenue
+                ],
+
+                "Prediction": [
+
+                    "Profit"
+                    if predicted_profit == 1
+                    else "Loss"
+
+                ],
+
+                "Confidence": [
+                    confidence
+                ]
+
+            })
+
+
+            csv_data = result_df.to_csv(
+                index=False
+            )
+
+
+            st.download_button(
+                label="📥 Download Prediction Report",
+                data=csv_data,
+                file_name=(
+                    "Marketing_Campaign_Prediction.csv"
+                ),
+                mime="text/csv"
+            )
+
+
+        except Exception as error:
+
+            st.error(
+                f"❌ Prediction failed: {error}"
+            )
+
+
+# ==========================================================
+# ==========================================================
+# ABOUT PAGE
+# ==========================================================
+# ==========================================================
+
+elif page == "ℹ️ About":
+
+    st.header(
+        "ℹ️ About the Project"
+    )
+
+
+    st.markdown(
+        """
+## 📊 Multi-Brand Marketing Campaign Performance Prediction
+
+### 🎯 Project Objective
+
+The objective of this project is to use Machine Learning
+to analyze marketing campaigns and predict their performance.
+
+### 💰 Regression
+
+The regression model predicts:
+
+**Campaign Revenue**
+
+Models evaluated:
+
+- Linear Regression
+- Decision Tree Regressor
+- Random Forest Regressor
+
+### 🎯 Classification
+
+The classification model predicts:
+
+**Profit / Loss**
+
+Models evaluated:
+
+- Logistic Regression
+- Decision Tree Classifier
+- Random Forest Classifier
+
+### 📈 Evaluation Metrics
+
+**Regression**
+
+- R² Score
+- MAE
+- MSE
+- RMSE
+- MAPE
+
+**Classification**
+
+- Accuracy
+- Precision
+- Recall
+- F1 Score
+- Confusion Matrix
+- ROC-AUC
+
+### 🛠️ Technologies
+
+- Python
+- Pandas
+- NumPy
+- Scikit-learn
+- Plotly
+- Streamlit
+- Joblib
+
+### 💡 Business Value
+
+The application helps businesses:
+
+- Identify potentially profitable campaigns.
+- Estimate expected campaign revenue.
+- Analyze marketing channels.
+- Optimize campaign budgets.
+- Improve marketing performance.
+        """
+    )
+
 
 # ==========================================================
 # FOOTER
 # ==========================================================
 
-st.markdown("---")
+st.divider()
 
 st.caption(
-    "Marketing Campaign Performance Prediction using Machine Learning & Streamlit"
+    "📊 Marketing Campaign Performance Prediction | "
+    "Machine Learning Mini Project"
 )
