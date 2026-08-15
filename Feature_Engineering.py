@@ -1,40 +1,19 @@
-# ==========================================================
-# FEATURE ENGINEERING
-# ==========================================================
-
+#Feature Engineering
 import pandas as pd
 import numpy as np
 import joblib
 from sklearn.preprocessing import MultiLabelBinarizer
-# ==========================================================
-# LOAD CLEANED DATASET
-# ==========================================================
 
-INPUT_FILE = "cleaned_marketing_campaign_data.csv"
-OUTPUT_FILE = "feature_engineered_marketing_campaign_data.csv"
+cleaned_file = "cleaned_marketing_campaign_data.csv"
+featured_file = "feature_engineered_marketing_campaign_data.csv"
 
-campaign_df = pd.read_csv(INPUT_FILE)
-
-print("\nDataset Loaded Successfully")
-print("Shape :", campaign_df.shape)
-
-# ==========================================================
-# SAFE DIVISION FUNCTION
-# ==========================================================
+campaign_df = pd.read_csv(cleaned_file)
 
 def safe_divide(numerator, denominator):
-
     denominator = denominator.replace(0, np.nan)
-
     result = numerator / denominator
-
     result = result.replace([np.inf, -np.inf], np.nan)
-
     return result.fillna(0)
-
-# ==========================================================
-# FEATURE ENGINEERING
-# ==========================================================
 
 print("\nCreating Engineered Features...")
 
@@ -63,18 +42,12 @@ campaign_df["Lead_Conversion_Rate"] = safe_divide(
     campaign_df["Leads"]
 )
 
-# ==========================================================
-# ROUND FEATURES
-# ==========================================================
-
 engineered_features = [
-
     "CTR",
     "Conversion_Rate",
     "Cost_Per_Click",
     "Cost_Per_Conversion",
     "Lead_Conversion_Rate"
-
 ]
 
 campaign_df[engineered_features] = campaign_df[
@@ -83,9 +56,7 @@ campaign_df[engineered_features] = campaign_df[
 
 print("Engineered Features Created Successfully")
 
-# ==========================================================
-# PROFIT FLAG
-# ==========================================================
+print("\nCreating Profit_Flag...")
 
 campaign_df["Profit_Flag"] = np.where(
     campaign_df["ROI"] > 0,
@@ -95,11 +66,10 @@ campaign_df["Profit_Flag"] = np.where(
 
 print("Profit_Flag Created Successfully")
 
-# ==========================================================
-# MULTI LABEL ENCODING
-# ==========================================================
+print("\nProfit_Flag Distribution:")
+print(campaign_df["Profit_Flag"].value_counts())
 
-print("\nApplying Multi-Label Encoding...")
+print("\nEncoding Channel_Used...")
 
 campaign_df["Channel_Used"] = (
     campaign_df["Channel_Used"]
@@ -107,54 +77,43 @@ campaign_df["Channel_Used"] = (
     .astype(str)
 )
 
-campaign_df["Channel_Used"] = campaign_df["Channel_Used"].apply(
-
+campaign_df["Channel_Used"] = campaign_df[
+    "Channel_Used"
+].apply(
     lambda x: [
         item.strip().title()
         for item in x.split(",")
-        if item.strip() != ""
+        if item.strip()
     ]
-
 )
 
 mlb = MultiLabelBinarizer()
 
 encoded_channels = pd.DataFrame(
-
     mlb.fit_transform(
         campaign_df["Channel_Used"]
     ),
-
     columns=[
         f"Channel_{channel}"
         for channel in mlb.classes_
     ],
-
     index=campaign_df.index
-
 )
 
 campaign_df.drop(
-    columns="Channel_Used",
+    columns=["Channel_Used"],
     inplace=True
 )
 
 campaign_df = pd.concat(
-
     [
         campaign_df,
         encoded_channels
     ],
-
     axis=1
-
 )
 
 print("Channel Encoding Completed")
-
-# ==========================================================
-# SAVE CHANNEL CLASSES
-# ==========================================================
 
 joblib.dump(
     mlb.classes_,
@@ -163,66 +122,35 @@ joblib.dump(
 
 print("channel_classes.pkl Saved")
 
-# ==========================================================
-# DISPLAY ENCODED CHANNEL SUMMARY
-# ==========================================================
-
-print("\nEncoded Channel Counts")
-
+print("\nEncoded Channel Columns:")
 print(
-
-    campaign_df.filter(
-        regex="^Channel_"
-    ).sum()
-
+    encoded_channels.columns.tolist()
 )
 
-# ==========================================================
-# CHECK MISSING VALUES
-# ==========================================================
+print("\nMissing Values:")
+print(
+    campaign_df.isnull().sum()
+)
 
-print("\nMissing Values")
+print("\nDataset Shape After Feature Engineering:")
+print(
+    campaign_df.shape
+)
 
-print(campaign_df.isnull().sum())
+print("\nData Types:")
+print(
+    campaign_df.dtypes
+)
 
-# ==========================================================
-# DATASET INFORMATION
-# ==========================================================
-
-print("\nDataset Shape")
-
-print(campaign_df.shape)
-
-print("\nColumns")
-
-print(campaign_df.columns.tolist())
-
-print("\nData Types")
-
-print(campaign_df.dtypes)
-
-print("\nFirst Five Rows")
-
-print(campaign_df.head())
-
-print("\nStatistical Summary")
-
-print(campaign_df.describe(include="all"))
-
-# ==========================================================
-# SAVE FEATURE ENGINEERED DATASET
-# ==========================================================
+print("\nFirst Five Rows:")
+print(
+    campaign_df.head()
+)
 
 campaign_df.to_csv(
-
-    OUTPUT_FILE,
-
+    featured_file,
     index=False,
-
     encoding="utf-8-sig"
-
 )
 
 print("\nFeature Engineered Dataset Saved Successfully")
-
-print("Output File :", OUTPUT_FILE)
