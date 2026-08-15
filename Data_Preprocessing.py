@@ -1,65 +1,38 @@
-# ==========================================================
-# DATA PREPROCESSING
-# ==========================================================
-
+#Data Preprocessing
 import pandas as pd
 import numpy as np
 
-# ==========================================================
-# LOAD DATASET
-# ==========================================================
+combained_file = "combined_marketing_campaign_data.csv"
+cleaned_file = "cleaned_marketing_campaign_data.csv"
 
-INPUT_FILE = "combined_marketing_campaign_data.csv"
-OUTPUT_FILE = "cleaned_marketing_campaign_data.csv"
+campaign_df = pd.read_csv(combained_file)
 
-campaign_df = pd.read_csv(INPUT_FILE)
-
-print("\nDataset Loaded Successfully")
-print("Shape :", campaign_df.shape)
-
-# ==========================================================
-# DATASET INFORMATION
-# ==========================================================
-
-print("\nMissing Values Before Cleaning")
-print(campaign_df.isnull().sum())
-
-print("\nDuplicate Records Before Cleaning")
-print(campaign_df.duplicated().sum())
-
-# ==========================================================
-# REMOVE DUPLICATES
-# ==========================================================
-
+# Remove duplicates
 if "Campaign_ID" in campaign_df.columns:
-
     campaign_df.drop_duplicates(
         subset="Campaign_ID",
         keep="first",
         inplace=True
     )
-
 else:
+    campaign_df.drop_duplicates(
+        inplace=True
+    )
 
-    campaign_df.drop_duplicates(inplace=True)
+campaign_df.reset_index(
+    drop=True,
+    inplace=True
+)
 
-campaign_df.reset_index(drop=True, inplace=True)
-
-# ==========================================================
-# CONVERT DATE
-# ==========================================================
-
+# Convert Date
 if "Date" in campaign_df.columns:
-
     campaign_df["Date"] = pd.to_datetime(
         campaign_df["Date"],
+        dayfirst=True,
         errors="coerce"
     )
 
-# ==========================================================
-# NUMERICAL COLUMNS
-# ==========================================================
-
+# Clean numerical columns
 numerical_columns = [
     "Duration",
     "Impressions",
@@ -91,12 +64,11 @@ for col in numerical_columns:
         if pd.isna(median):
             median = 0
 
-        campaign_df[col] = campaign_df[col].fillna(median)
+        campaign_df[col] = campaign_df[col].fillna(
+            median
+        )
 
-# ==========================================================
-# CATEGORICAL COLUMNS
-# ==========================================================
-
+# Clean categorical columns
 categorical_columns = [
     "Campaign_Type",
     "Target_Audience",
@@ -124,16 +96,17 @@ for col in categorical_columns:
         mode = campaign_df[col].mode()
 
         if not mode.empty:
-            campaign_df[col] = campaign_df[col].fillna(mode.iloc[0])
+            campaign_df[col] = campaign_df[col].fillna(
+                mode.iloc[0]
+            )
         else:
-            campaign_df[col] = campaign_df[col].fillna("Unknown")
+            campaign_df[col] = campaign_df[col].fillna(
+                "Unknown"
+            )
 
         campaign_df[col] = campaign_df[col].str.title()
 
-# ==========================================================
-# CLEAN CAMPAIGN ID
-# ==========================================================
-
+# Clean Campaign ID
 if "Campaign_ID" in campaign_df.columns:
 
     campaign_df["Campaign_ID"] = (
@@ -142,22 +115,25 @@ if "Campaign_ID" in campaign_df.columns:
         .str.strip()
     )
 
-    campaign_df["Campaign_ID"] = campaign_df["Campaign_ID"].fillna("")
+    campaign_df["Campaign_ID"] = (
+        campaign_df["Campaign_ID"]
+        .fillna("")
+    )
 
-    mask = campaign_df["Campaign_ID"] == ""
+    missing_id = campaign_df["Campaign_ID"] == ""
 
     campaign_df.loc[
-        mask,
+        missing_id,
         "Campaign_ID"
     ] = [
         f"AUTO_{i}"
-        for i in range(1, mask.sum() + 1)
+        for i in range(
+            1,
+            missing_id.sum() + 1
+        )
     ]
 
-# ==========================================================
-# REMOVE NEGATIVE VALUES
-# ==========================================================
-
+# Remove negative values
 positive_columns = [
     "Duration",
     "Impressions",
@@ -172,21 +148,22 @@ positive_columns = [
 for col in positive_columns:
 
     if col in campaign_df.columns:
+        campaign_df[col] = campaign_df[col].clip(
+            lower=0
+        )
 
-        campaign_df[col] = campaign_df[col].clip(lower=0)
-
-# ==========================================================
-# BUSINESS RULE VALIDATION
-# ==========================================================
-
-required = [
+# Apply business rules
+required_columns = [
     "Impressions",
     "Clicks",
     "Leads",
     "Conversions"
 ]
 
-if all(col in campaign_df.columns for col in required):
+if all(
+    col in campaign_df.columns
+    for col in required_columns
+):
 
     campaign_df["Clicks"] = np.minimum(
         campaign_df["Clicks"],
@@ -203,26 +180,36 @@ if all(col in campaign_df.columns for col in required):
         campaign_df["Leads"]
     )
 
-# ==========================================================
-# ROI VALIDATION
-# ==========================================================
+# Validate ROI
 
 if "ROI" in campaign_df.columns:
 
+    # Check for invalid infinite values
+    campaign_df["ROI"] = campaign_df["ROI"].replace(
+        [np.inf, -np.inf],
+        np.nan
+    )
+
+    # Fill missing ROI with median
     median_roi = campaign_df["ROI"].median()
 
-    campaign_df.loc[
-        (campaign_df["ROI"] < -100) |
-        (campaign_df["ROI"] > 1000),
-        "ROI"
-    ] = median_roi
+    if pd.isna(median_roi):
+        median_roi = 0
 
+    campaign_df["ROI"] = campaign_df["ROI"].fillna(
+        median_roi
+    )
+
+    # Round ROI
     campaign_df["ROI"] = campaign_df["ROI"].round(2)
 
-# ==========================================================
-# SAFE INTEGER CONVERSION
-# ==========================================================
+    # Display ROI range for validation
+    print("\nROI Validation:")
+    print("Minimum ROI:", campaign_df["ROI"].min())
+    print("Maximum ROI:", campaign_df["ROI"].max())
+    print("Negative ROI Count:", (campaign_df["ROI"] < 0).sum())
 
+# Convert integer columns
 integer_columns = [
     "Duration",
     "Impressions",
@@ -235,31 +222,9 @@ for col in integer_columns:
 
     if col in campaign_df.columns:
 
-        campaign_df[col] = pd.to_numeric(
-            campaign_df[col],
-            errors="coerce"
-        )
+        campaign_df[col] = campaign_df[col].round().astype(int)
 
-        campaign_df[col] = campaign_df[col].replace(
-            [np.inf, -np.inf],
-            np.nan
-        )
-
-        median = campaign_df[col].median()
-
-        if pd.isna(median):
-            median = 0
-
-        campaign_df[col] = campaign_df[col].fillna(median)
-
-        campaign_df[col] = campaign_df[col].round()
-
-        campaign_df[col] = campaign_df[col].astype(int)
-
-# ==========================================================
-# FLOAT CONVERSION
-# ==========================================================
-
+# Convert float columns
 float_columns = [
     "Revenue",
     "Acquisition_Cost",
@@ -270,36 +235,26 @@ float_columns = [
 for col in float_columns:
 
     if col in campaign_df.columns:
-
         campaign_df[col] = campaign_df[col].astype(float)
 
-# ==========================================================
-# FINAL VALIDATION
-# ==========================================================
+# Final validation
+print("\nFinal Dataset Shape:")
+print(campaign_df.shape)
 
-print("\nDataset Shape :", campaign_df.shape)
-
-print("\nMissing Values")
+print("\nMissing Values:")
 print(campaign_df.isnull().sum())
 
-print("\nDuplicate Records")
+print("\nDuplicate Records:")
 print(campaign_df.duplicated().sum())
 
-print("\nData Types")
+print("\nData Types:")
 print(campaign_df.dtypes)
 
-print("\nStatistical Summary")
-print(campaign_df.describe(include="all"))
-
-# ==========================================================
-# SAVE CLEANED DATASET
-# ==========================================================
-
+# Save cleaned dataset
 campaign_df.to_csv(
-    OUTPUT_FILE,
+    cleaned_file,
     index=False,
     encoding="utf-8-sig"
 )
 
 print("\nCleaned Dataset Saved Successfully")
-print("Output File :", OUTPUT_FILE)
