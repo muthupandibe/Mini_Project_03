@@ -817,3 +817,11 @@ The system combines Machine Learning predictions, data visualization, and busine
 ### Application
 
 **Interactive Streamlit Marketing Analytics & Prediction Dashboard**
+
+---
+
+## Author
+
+**Muthupandi**
+
+**Data Science Mini Project**
