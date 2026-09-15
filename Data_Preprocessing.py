@@ -1,705 +1,260 @@
-# ============================================================
-# Step2_Data_Preprocessing.py
-# MOBILE PRODUCT DATA PREPROCESSING
-# ============================================================
-
-import os
-import numpy as np
+#Data Preprocessing
 import pandas as pd
+import numpy as np
 
+combained_file = "combined_marketing_campaign_data.csv"
+cleaned_file = "cleaned_marketing_campaign_data.csv"
 
-# ============================================================
-# 1. FILE PATHS
-# ============================================================
+campaign_df = pd.read_csv(combained_file)
 
-input_file = "Mobile Reviews Sentiment null.csv"
-
-output_file = "cleaned_mobile_reviews.csv"
-
-
-# ============================================================
-# 2. CHECK INPUT FILE
-# ============================================================
-
-if not os.path.exists(input_file):
-
-    raise FileNotFoundError(
-
-        f"\nERROR: {input_file} not found.\n"
-        "Please place the original dataset in the project folder."
-
+# Remove duplicates
+if "Campaign_ID" in campaign_df.columns:
+    campaign_df.drop_duplicates(
+        subset="Campaign_ID",
+        keep="first",
+        inplace=True
+    )
+else:
+    campaign_df.drop_duplicates(
+        inplace=True
     )
 
-
-# ============================================================
-# 3. LOAD DATASET
-# ============================================================
-
-df = pd.read_csv(
-
-    input_file,
-
-    low_memory=False
-
+campaign_df.reset_index(
+    drop=True,
+    inplace=True
 )
 
-
-# Clean column names
-df.columns = (
-
-    df.columns
-    .str.strip()
-
-)
-
-
-print("\n" + "=" * 70)
-print("MOBILE PRODUCT DATA PREPROCESSING")
-print("=" * 70)
-
-
-print(
-
-    "\nOriginal Dataset Shape:",
-
-    df.shape
-
-)
-
-
-print("\nOriginal Columns:")
-
-
-for column in df.columns:
-
-    print(
-        "-",
-        column
+# Convert Date
+if "Date" in campaign_df.columns:
+    campaign_df["Date"] = pd.to_datetime(
+        campaign_df["Date"],
+        dayfirst=True,
+        errors="coerce"
     )
 
-
-# ============================================================
-# 4. REQUIRED RAW COLUMNS
-# ============================================================
-
-required_raw_columns = [
-
-    "brand",
-    "model",
-
-    "price_usd",
-    "rating",
-
-    "battery_life_rating",
-    "camera_rating",
-    "performance_rating",
-    "design_rating",
-    "display_rating",
-
-    "helpful_votes",
-
-    "country"
-
+# Clean numerical columns
+numerical_columns = [
+    "Duration",
+    "Impressions",
+    "Clicks",
+    "Leads",
+    "Conversions",
+    "Revenue",
+    "Acquisition_Cost",
+    "ROI",
+    "Engagement_Score"
 ]
 
+for col in numerical_columns:
 
-missing_raw_columns = [
+    if col in campaign_df.columns:
 
-    column
-
-    for column in required_raw_columns
-
-    if column not in df.columns
-
-]
-
-
-if missing_raw_columns:
-
-    raise ValueError(
-
-        "\nERROR: Required columns are missing "
-        "from the ORIGINAL dataset:\n\n"
-
-        +
-
-        "\n".join(
-
-            f"- {column}"
-
-            for column in missing_raw_columns
-
+        campaign_df[col] = pd.to_numeric(
+            campaign_df[col],
+            errors="coerce"
         )
 
-        +
-
-        "\n\nPlease check that you are using "
-        "the original Mobile Reviews Sentiment dataset."
-
-    )
-
-
-# ============================================================
-# 5. REMOVE EXACT DUPLICATES
-# ============================================================
-
-print("\n" + "=" * 70)
-print("DUPLICATE CHECK")
-print("=" * 70)
-
-
-duplicate_count = df.duplicated().sum()
-
-
-print(
-
-    "Duplicate rows found:",
-
-    duplicate_count
-
-)
-
-
-if duplicate_count > 0:
-
-    df = (
-
-        df
-        .drop_duplicates()
-        .reset_index(drop=True)
-
-    )
-
-
-print(
-
-    "Dataset shape after duplicate removal:",
-
-    df.shape
-
-)
-
-
-# ============================================================
-# 6. NUMERIC COLUMNS
-# ============================================================
-
-numeric_columns = [
-
-    "age",
-
-    "price_usd",
-    "price_local",
-
-    "exchange_rate_to_usd",
-
-    "rating",
-
-    "battery_life_rating",
-    "camera_rating",
-    "performance_rating",
-    "design_rating",
-    "display_rating",
-
-    "helpful_votes"
-
-]
-
-
-# Only convert columns that actually exist
-numeric_columns = [
-
-    column
-
-    for column in numeric_columns
-
-    if column in df.columns
-
-]
-
-
-print("\n" + "=" * 70)
-print("NUMERIC TYPE CONVERSION")
-print("=" * 70)
-
-
-for column in numeric_columns:
-
-    df[column] = pd.to_numeric(
-
-        df[column],
-
-        errors="coerce"
-
-    )
-
-
-print(
-
-    "\nNumeric columns converted successfully."
-
-)
-
-
-# ============================================================
-# 7. HANDLE INFINITE VALUES
-# ============================================================
-
-df = df.replace(
-
-    [np.inf, -np.inf],
-
-    np.nan
-
-)
-
-
-# ============================================================
-# 8. CREATE ENGAGEMENT SCORE
-# ============================================================
-
-print("\n" + "=" * 70)
-print("ENGAGEMENT SCORE FEATURE ENGINEERING")
-print("=" * 70)
-
-
-# helpful_votes represents user engagement.
-# log1p reduces the effect of extremely large vote counts.
-
-df["helpful_votes"] = (
-
-    pd.to_numeric(
-
-        df["helpful_votes"],
-
-        errors="coerce"
-
-    )
-
-    .fillna(0)
-
-)
-
-
-# Make sure negative values do not occur
-df["helpful_votes"] = (
-
-    df["helpful_votes"]
-    .clip(lower=0)
-
-)
-
-
-df["engagement_score"] = (
-
-    np.log1p(
-        df["helpful_votes"]
-    )
-
-)
-
-
-print(
-
-    "engagement_score created successfully."
-
-)
-
-
-print(
-
-    "\nEngagement Score Statistics:"
-
-)
-
-
-print(
-
-    df[
-        "engagement_score"
-    ]
-    .describe()
-
-)
-
-
-# ============================================================
-# 9. HANDLE MISSING NUMERIC VALUES
-# ============================================================
-
-print("\n" + "=" * 70)
-print("MISSING NUMERIC VALUES")
-print("=" * 70)
-
-
-numeric_features_for_model = [
-
-    "price_usd",
-    "rating",
-
-    "battery_life_rating",
-    "camera_rating",
-    "performance_rating",
-    "design_rating",
-    "display_rating",
-
-    "engagement_score"
-
-]
-
-
-for column in numeric_features_for_model:
-
-    median_value = (
-
-        df[column]
-        .median()
-
-    )
-
-
-    if pd.isna(median_value):
-
-        median_value = 0
-
-
-    df[column] = (
-
-        df[column]
-        .fillna(
-            median_value
+        campaign_df[col] = campaign_df[col].replace(
+            [np.inf, -np.inf],
+            np.nan
         )
 
-    )
+        median = campaign_df[col].median()
 
+        if pd.isna(median):
+            median = 0
 
-print(
+        campaign_df[col] = campaign_df[col].fillna(
+            median
+        )
 
-    "\nMissing numeric values handled successfully."
-
-)
-
-
-print(
-
-    "\nRemaining missing values:"
-
-)
-
-
-print(
-
-    df[
-        numeric_features_for_model
-    ]
-    .isnull()
-    .sum()
-
-)
-
-
-# ============================================================
-# 10. HANDLE CATEGORICAL COLUMNS
-# ============================================================
-
+# Clean categorical columns
 categorical_columns = [
-
-    "brand",
-    "model",
-    "country"
-
+    "Campaign_Type",
+    "Target_Audience",
+    "Channel_Used",
+    "Language",
+    "Customer_Segment",
+    "Brand"
 ]
 
+for col in categorical_columns:
 
-for column in categorical_columns:
+    if col in campaign_df.columns:
 
-    df[column] = (
+        campaign_df[col] = (
+            campaign_df[col]
+            .astype("string")
+            .str.strip()
+        )
 
-        df[column]
-        .astype(str)
-        .str.strip()
-
-    )
-
-
-    df[column] = (
-
-        df[column]
-        .replace(
+        campaign_df[col] = campaign_df[col].replace(
             ["", "nan", "None"],
-            "Unknown"
+            pd.NA
         )
 
+        mode = campaign_df[col].mode()
+
+        if not mode.empty:
+            campaign_df[col] = campaign_df[col].fillna(
+                mode.iloc[0]
+            )
+        else:
+            campaign_df[col] = campaign_df[col].fillna(
+                "Unknown"
+            )
+
+        campaign_df[col] = campaign_df[col].str.title()
+
+# Clean Campaign ID
+if "Campaign_ID" in campaign_df.columns:
+
+    campaign_df["Campaign_ID"] = (
+        campaign_df["Campaign_ID"]
+        .astype("string")
+        .str.strip()
     )
 
-
-print("\n" + "=" * 70)
-print("CATEGORICAL VALUES HANDLED")
-print("=" * 70)
-
-
-for column in categorical_columns:
-
-    print(
-
-        f"{column}: "
-        f"{df[column].nunique()} unique values"
-
+    campaign_df["Campaign_ID"] = (
+        campaign_df["Campaign_ID"]
+        .fillna("")
     )
 
+    missing_id = campaign_df["Campaign_ID"] == ""
 
-# ============================================================
-# 11. SELECT FINAL COLUMNS
-# ============================================================
-
-final_columns = [
-
-    "brand",
-    "model",
-    "country",
-
-    "price_usd",
-
-    "rating",
-
-    "battery_life_rating",
-    "camera_rating",
-    "performance_rating",
-    "design_rating",
-    "display_rating",
-
-    "helpful_votes",
-
-    "engagement_score"
-
-]
-
-
-# Keep only columns that exist
-final_columns = [
-
-    column
-
-    for column in final_columns
-
-    if column in df.columns
-
-]
-
-
-df_cleaned = (
-
-    df[
-        final_columns
+    campaign_df.loc[
+        missing_id,
+        "Campaign_ID"
+    ] = [
+        f"AUTO_{i}"
+        for i in range(
+            1,
+            missing_id.sum() + 1
+        )
     ]
-    .copy()
 
-)
-
-
-# ============================================================
-# 12. FINAL MISSING VALUE CHECK
-# ============================================================
-
-print("\n" + "=" * 70)
-print("FINAL DATA QUALITY CHECK")
-print("=" * 70)
-
-
-print(
-
-    "\nFinal Dataset Shape:",
-
-    df_cleaned.shape
-
-)
-
-
-print(
-
-    "\nFinal Columns:"
-
-)
-
-
-for column in df_cleaned.columns:
-
-    print(
-        "-",
-        column
-    )
-
-
-print(
-
-    "\nMissing Values:"
-
-)
-
-
-print(
-
-    df_cleaned
-    .isnull()
-    .sum()
-
-)
-
-
-# ============================================================
-# 13. VERIFY ENGAGEMENT SCORE
-# ============================================================
-
-if "engagement_score" not in df_cleaned.columns:
-
-    raise ValueError(
-
-        "\nERROR: engagement_score was not created.\n"
-        "Please check the helpful_votes column."
-
-    )
-
-
-# ============================================================
-# 14. VERIFY CLUSTERING FEATURES
-# ============================================================
-
-clustering_features = [
-
-    "price_usd",
-    "rating",
-
-    "battery_life_rating",
-    "camera_rating",
-    "performance_rating",
-    "design_rating",
-    "display_rating",
-
-    "engagement_score"
-
+# Remove negative values
+positive_columns = [
+    "Duration",
+    "Impressions",
+    "Clicks",
+    "Leads",
+    "Conversions",
+    "Revenue",
+    "Acquisition_Cost",
+    "Engagement_Score"
 ]
 
+for col in positive_columns:
 
-missing_clustering_features = [
-
-    column
-
-    for column in clustering_features
-
-    if column not in df_cleaned.columns
-
-]
-
-
-if missing_clustering_features:
-
-    raise ValueError(
-
-        "\nERROR: Clustering features are missing:\n"
-
-        +
-
-        "\n".join(
-
-            f"- {column}"
-
-            for column in missing_clustering_features
-
+    if col in campaign_df.columns:
+        campaign_df[col] = campaign_df[col].clip(
+            lower=0
         )
 
-    )
+# Apply business rules
+required_columns = [
+    "Impressions",
+    "Clicks",
+    "Leads",
+    "Conversions"
+]
 
-
-print("\n" + "=" * 70)
-print("CLUSTERING FEATURE VALIDATION")
-print("=" * 70)
-
-
-print(
-
-    "\nAll 8 clustering features are available."
-
-)
-
-
-for number, feature in enumerate(
-
-    clustering_features,
-
-    start=1
-
+if all(
+    col in campaign_df.columns
+    for col in required_columns
 ):
 
-    print(
-
-        f"{number}. {feature}"
-
+    campaign_df["Clicks"] = np.minimum(
+        campaign_df["Clicks"],
+        campaign_df["Impressions"]
     )
 
-
-# ============================================================
-# 15. SAVE CLEANED DATASET
-# ============================================================
-
-df_cleaned.to_csv(
-
-    output_file,
-
-    index=False
-
-)
-
-
-print("\n" + "=" * 70)
-print("CLEANED DATASET SAVED")
-print("=" * 70)
-
-
-print(
-
-    "\nOutput File:",
-
-    output_file
-
-)
-
-
-print(
-
-    "Final Dataset Shape:",
-
-    df_cleaned.shape
-
-)
-
-
-# ============================================================
-# 16. FINAL SUMMARY
-# ============================================================
-
-print("\n" + "=" * 70)
-print("STEP 2 PREPROCESSING COMPLETED SUCCESSFULLY")
-print("=" * 70)
-
-
-print("\nFeatures prepared for clustering:")
-
-
-for feature in clustering_features:
-
-    print(
-        "-",
-        feature
+    campaign_df["Leads"] = np.minimum(
+        campaign_df["Leads"],
+        campaign_df["Clicks"]
     )
 
+    campaign_df["Conversions"] = np.minimum(
+        campaign_df["Conversions"],
+        campaign_df["Leads"]
+    )
 
-print(
+# Validate ROI
 
-    "\nOutput:",
+if "ROI" in campaign_df.columns:
 
-    "cleaned_mobile_reviews.csv"
+    # Check for invalid infinite values
+    campaign_df["ROI"] = campaign_df["ROI"].replace(
+        [np.inf, -np.inf],
+        np.nan
+    )
 
+    # Fill missing ROI with median
+    median_roi = campaign_df["ROI"].median()
+
+    if pd.isna(median_roi):
+        median_roi = 0
+
+    campaign_df["ROI"] = campaign_df["ROI"].fillna(
+        median_roi
+    )
+
+    # Round ROI
+    campaign_df["ROI"] = campaign_df["ROI"].round(2)
+
+    # Display ROI range for validation
+    print("\nROI Validation:")
+    print("Minimum ROI:", campaign_df["ROI"].min())
+    print("Maximum ROI:", campaign_df["ROI"].max())
+    print("Negative ROI Count:", (campaign_df["ROI"] < 0).sum())
+
+# Convert integer columns
+integer_columns = [
+    "Duration",
+    "Impressions",
+    "Clicks",
+    "Leads",
+    "Conversions"
+]
+
+for col in integer_columns:
+
+    if col in campaign_df.columns:
+
+        campaign_df[col] = campaign_df[col].round().astype(int)
+
+# Convert float columns
+float_columns = [
+    "Revenue",
+    "Acquisition_Cost",
+    "ROI",
+    "Engagement_Score"
+]
+
+for col in float_columns:
+
+    if col in campaign_df.columns:
+        campaign_df[col] = campaign_df[col].astype(float)
+
+# Final validation
+print("\nFinal Dataset Shape:")
+print(campaign_df.shape)
+
+print("\nMissing Values:")
+print(campaign_df.isnull().sum())
+
+print("\nDuplicate Records:")
+print(campaign_df.duplicated().sum())
+
+print("\nData Types:")
+print(campaign_df.dtypes)
+
+# Save cleaned dataset
+campaign_df.to_csv(
+    cleaned_file,
+    index=False,
+    encoding="utf-8-sig"
 )
 
-
-print("\n" + "=" * 70)
+print("\nCleaned Dataset Saved Successfully")
