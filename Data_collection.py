@@ -1,73 +1,156 @@
-# Data Collection & Understanding
+# ============================================================
+# Step1_Data_Collection.py
+# ============================================================
+
 import os
 import pandas as pd
 
-DATASETS = {
-    "Nykaa": "nykaa_campaign_data_with_nulls.csv",
-    "Purplle": "purplle_campaign_data_with_nulls.csv",
-    "Tira": "tira_campaign_data_with_nulls.csv"
-}
 
-combined_file = "combined_marketing_campaign_data.csv"
+# ============================================================
+# 1. LOAD DATASET
+# ============================================================
 
-dataframes = []
+file_path = "Mobile Reviews Sentiment null.csv"
 
-for brand, file_name in DATASETS.items():
+print("\n" + "=" * 60)
+print("MOBILE REVIEWS DATA COLLECTION")
+print("=" * 60)
 
-    if not os.path.exists(file_name):
-        raise FileNotFoundError(
-            f"Dataset not found: {file_name}"
-        )
+# Check whether file exists
+if not os.path.exists(file_path):
+    print(f"\nERROR: Dataset file not found!")
+    print(f"Expected file: {file_path}")
+    raise FileNotFoundError(file_path)
 
-    print(f"\nLoading {brand} Dataset...")
+# Load dataset
+df = pd.read_csv(file_path, low_memory=False)
 
-    df = pd.read_csv(file_name)
+print("\nDataset loaded successfully!")
 
-    df["Brand"] = brand
 
-    print(f"{brand} Shape: {df.shape}")
+# ============================================================
+# 2. DATASET SHAPE
+# ============================================================
 
-    dataframes.append(df)
+print("\n" + "=" * 60)
+print("DATASET SHAPE")
+print("=" * 60)
 
-print("\nAll Datasets Loaded Successfully.")
+print(f"Number of Rows    : {df.shape[0]}")
+print(f"Number of Columns : {df.shape[1]}")
 
-campaign_df = pd.concat(
-    dataframes,
-    ignore_index=True
-)
 
-print("\nDatasets Merged Successfully.")
+# ============================================================
+# 3. COLUMN NAMES
+# ============================================================
 
-print("\nDataset Information:")
-print(campaign_df.info())
+print("\n" + "=" * 60)
+print("COLUMN NAMES")
+print("=" * 60)
 
-print("\nDataset Shape:")
-print(campaign_df.shape)
+for i, column in enumerate(df.columns, start=1):
+    print(f"{i}. {column}")
 
-print("\nColumn Names:")
-print(campaign_df.columns.tolist())
 
-print("\nData Types:")
-print(campaign_df.dtypes)
+# ============================================================
+# 4. DATA TYPES
+# ============================================================
 
-print("\nMissing Values:")
-print(campaign_df.isnull().sum())
+print("\n" + "=" * 60)
+print("DATA TYPES")
+print("=" * 60)
 
-print("\nduplicate_count:")
-print(campaign_df.duplicated().sum())
+print(df.dtypes)
 
-print("\nFirst Five Records:")
-print(campaign_df.head())
 
-print("\nStatistical Summary:")
-print(campaign_df.describe(include="all"))
+# ============================================================
+# 5. DATASET INFORMATION
+# ============================================================
 
-print("\nCampaign Count by Brand:")
-print(campaign_df["Brand"].value_counts())
+print("\n" + "=" * 60)
+print("DATASET INFORMATION")
+print("=" * 60)
 
-campaign_df.to_csv(
-    combined_file,
-    index=False,
-    encoding="utf-8-sig"
-)
-print("\nCombined Dataset Saved Successfully.")
+df.info()
+
+
+# ============================================================
+# 6. FIRST 5 RECORDS
+# ============================================================
+
+print("\n" + "=" * 60)
+print("FIRST 5 RECORDS")
+print("=" * 60)
+
+print(df.head())
+
+
+# ============================================================
+# 7. MISSING VALUES
+# ============================================================
+
+print("\n" + "=" * 60)
+print("MISSING VALUES")
+print("=" * 60)
+
+missing_values = df.isnull().sum()
+
+print(missing_values)
+
+total_missing = missing_values.sum()
+
+print(f"\nTotal Missing Values: {total_missing}")
+
+
+# ============================================================
+# 8. DUPLICATE RECORDS
+# ============================================================
+
+print("\n" + "=" * 60)
+print("DUPLICATE RECORDS")
+print("=" * 60)
+
+duplicate_count = df.duplicated().sum()
+
+print(f"Number of Duplicate Records: {duplicate_count}")
+
+if len(df) > 0:
+    duplicate_percentage = (duplicate_count / len(df)) * 100
+    print(f"Duplicate Percentage       : {duplicate_percentage:.2f}%")
+
+
+# ============================================================
+# 9. BASIC STATISTICAL SUMMARY
+# ============================================================
+
+print("\n" + "=" * 60)
+print("STATISTICAL SUMMARY")
+print("=" * 60)
+
+print(df.describe(include="all").T)
+
+
+# ============================================================
+# 10. UNIQUE VALUES
+# ============================================================
+
+print("\n" + "=" * 60)
+print("UNIQUE VALUES")
+print("=" * 60)
+
+print(df.nunique().sort_values(ascending=False))
+
+
+# ============================================================
+# 11. SAVE RAW DATASET COPY
+# ============================================================
+
+output_file = "collected_mobile_reviews.csv"
+
+df.to_csv(output_file, index=False)
+
+print("\n" + "=" * 60)
+print("DATA COLLECTION COMPLETED SUCCESSFULLY")
+print("=" * 60)
+
+print(f"\nRaw dataset saved as: {output_file}")
