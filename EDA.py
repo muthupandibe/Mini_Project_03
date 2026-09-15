@@ -1,217 +1,683 @@
-# EXPLORATORY DATA ANALYSIS (EDA)
-import warnings
-warnings.filterwarnings("ignore")
+# ============================================================
+# Step3_EDA.py
+# Mobile Product Segmentation and Recommendation System
+# ============================================================
 
+import os
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-import plotly.express as px
 
-plt.style.use("ggplot")
 
-INPUT_FILE = "feature_engineered_marketing_campaign_data.csv"
+# ============================================================
+# 1. FILE PATHS
+# ============================================================
 
-campaign_df = pd.read_csv(INPUT_FILE)
+INPUT_FILE = "cleaned_mobile_reviews.csv"
 
-print("\nDataset Shape:")
-print(campaign_df.shape)
+EDA_BRAND_OUTPUT = "eda_brand_summary.csv"
+EDA_SPEC_OUTPUT = "eda_specification_summary.csv"
+EDA_PRODUCT_OUTPUT = "eda_product_summary.csv"
+EDA_COUNTRY_OUTPUT = "eda_country_summary.csv"
 
-# NUMERIC CONVERSION
-numeric_columns = [
-    "Duration",
-    "Impressions",
-    "Clicks",
-    "Leads",
-    "Conversions",
-    "Revenue",
-    "Acquisition_Cost",
-    "ROI",
-    "Engagement_Score",
-    "CTR",
-    "Conversion_Rate",
-    "Cost_Per_Click",
-    "Cost_Per_Conversion",
-    "Lead_Conversion_Rate"
-]
 
-for col in numeric_columns:
-    if col in campaign_df.columns:
-        campaign_df[col] = pd.to_numeric(
-            campaign_df[col],
-            errors="coerce"
-        )
+# ============================================================
+# 2. PROJECT HEADER
+# ============================================================
 
-# HANDLE MISSING NUMERIC VALUES
+print("\n" + "=" * 70)
+print("MOBILE PRODUCT EXPLORATORY DATA ANALYSIS")
+print("=" * 70)
 
-for col in numeric_columns:
-    if col in campaign_df.columns:
-        median_value = campaign_df[col].median()
 
-        if pd.isna(median_value):
-            median_value = 0
+# ============================================================
+# 3. CHECK INPUT FILE
+# ============================================================
 
-        campaign_df[col] = campaign_df[col].fillna(
-            median_value
-        )
+if not os.path.isfile(INPUT_FILE):
 
-print("\nMissing Values:")
-print(campaign_df.isnull().sum())
-
-print("\nDataset Information:")
-campaign_df.info()
-
-print("\nStatistical Summary:")
-print(campaign_df.describe(include="all"))
-
-# CAMPAIGN COUNT BY BRAND
-
-if "Brand" in campaign_df.columns:
-    plt.figure(figsize=(8, 5))
-    sns.countplot(data=campaign_df, x="Brand")
-    plt.title("Campaign Count by Brand")
-    plt.xticks(rotation=30)
-    plt.tight_layout()
-    plt.show()
-
-# REVENUE BY BRAND
-
-if "Brand" in campaign_df.columns and "Revenue" in campaign_df.columns:
-    brand_revenue = campaign_df.groupby(
-        "Brand",
-        as_index=False
-    )["Revenue"].sum().sort_values(
-        "Revenue",
-        ascending=False
+    raise FileNotFoundError(
+        f"\nERROR: {INPUT_FILE} not found.\n"
+        "Please run Step2_Data_Preprocessing.py first."
     )
 
-    print("\nRevenue by Brand:")
-    print(brand_revenue)
 
-    plt.figure(figsize=(8, 5))
-    sns.barplot(
-        data=brand_revenue,
-        x="Brand",
-        y="Revenue"
-    )
-    plt.title("Revenue by Brand")
-    plt.xticks(rotation=30)
-    plt.tight_layout()
-    plt.show()
+# ============================================================
+# 4. LOAD DATASET
+# ============================================================
 
-# ROI BY BRAND
-
-if "Brand" in campaign_df.columns and "ROI" in campaign_df.columns:
-    brand_roi = campaign_df.groupby(
-        "Brand",
-        as_index=False
-    )["ROI"].mean().sort_values(
-        "ROI",
-        ascending=False
-    )
-
-    print("\nAverage ROI by Brand:")
-    print(brand_roi)
-
-    plt.figure(figsize=(8, 5))
-    sns.barplot(
-        data=brand_roi,
-        x="Brand",
-        y="ROI"
-    )
-    plt.title("Average ROI by Brand")
-    plt.xticks(rotation=30)
-    plt.tight_layout()
-    plt.show()
-
-# CAMPAIGN TYPE DISTRIBUTION
-
-if "Campaign_Type" in campaign_df.columns:
-    plt.figure(figsize=(8, 5))
-    sns.countplot(
-        data=campaign_df,
-        x="Campaign_Type"
-    )
-    plt.xticks(rotation=30)
-    plt.title("Campaign Type Distribution")
-    plt.tight_layout()
-    plt.show()
-
-# TARGET AUDIENCE DISTRIBUTION
-
-if "Target_Audience" in campaign_df.columns:
-    plt.figure(figsize=(8, 5))
-    sns.countplot(
-        data=campaign_df,
-        x="Target_Audience"
-    )
-    plt.xticks(rotation=30)
-    plt.title("Target Audience Distribution")
-    plt.tight_layout()
-    plt.show()
-
-# REVENUE DISTRIBUTION
-
-if "Revenue" in campaign_df.columns:
-    plt.figure(figsize=(8, 5))
-    sns.histplot(
-        campaign_df["Revenue"],
-        bins=30,
-        kde=True
-    )
-    plt.title("Revenue Distribution")
-    plt.xlabel("Revenue")
-    plt.ylabel("Frequency")
-    plt.tight_layout()
-    plt.show()
-
-# ROI DISTRIBUTION
-
-if "ROI" in campaign_df.columns:
-    plt.figure(figsize=(8, 5))
-    sns.histplot(
-        campaign_df["ROI"],
-        bins=30,
-        kde=True
-    )
-    plt.title("ROI Distribution")
-    plt.xlabel("ROI")
-    plt.ylabel("Frequency")
-    plt.tight_layout()
-    plt.show()
-
-# REVENUE OUTLIERS
-
-if "Revenue" in campaign_df.columns:
-    plt.figure(figsize=(8, 5))
-    sns.boxplot(
-        x=campaign_df["Revenue"]
-    )
-    plt.title("Revenue Outliers")
-    plt.tight_layout()
-    plt.show()
-
-# ROI OUTLIERS
-
-if "ROI" in campaign_df.columns:
-    plt.figure(figsize=(8, 5))
-    sns.boxplot(
-        x=campaign_df["ROI"]
-    )
-    plt.title("ROI Outliers")
-    plt.tight_layout()
-    plt.show()
-
-# CORRELATION HEATMAP
-
-numeric_data = campaign_df.select_dtypes(
-    include=np.number
+df = pd.read_csv(
+    INPUT_FILE,
+    low_memory=False
 )
 
-if not numeric_data.empty:
-    correlation_matrix = numeric_data.corr()
+df.columns = (
+    df.columns
+    .str.strip()
+)
 
-    plt.figure(figsize=(18, 12))
+print("\nDataset loaded successfully.")
+print("Dataset Shape:", df.shape)
+
+
+# ============================================================
+# 5. DATASET INFORMATION
+# ============================================================
+
+print("\n" + "=" * 70)
+print("COLUMN NAMES")
+print("=" * 70)
+
+for i, column in enumerate(
+    df.columns,
+    start=1
+):
+    print(f"{i}. {column}")
+
+
+print("\n" + "=" * 70)
+print("DATA TYPES")
+print("=" * 70)
+
+print(df.dtypes)
+
+
+print("\n" + "=" * 70)
+print("MISSING VALUES")
+print("=" * 70)
+
+print(df.isnull().sum())
+
+
+# ============================================================
+# 6. STATISTICAL SUMMARY
+# ============================================================
+
+print("\n" + "=" * 70)
+print("STATISTICAL SUMMARY")
+print("=" * 70)
+
+numeric_columns = df.select_dtypes(
+    include="number"
+).columns.tolist()
+
+print(
+    df[numeric_columns]
+    .describe()
+    .T
+)
+
+
+# ============================================================
+# 7. BRAND DISTRIBUTION
+# ============================================================
+
+if all(
+    column in df.columns
+    for column in ["brand", "model"]
+):
+
+    brand_distribution = (
+        df.groupby("brand")["model"]
+        .nunique()
+        .sort_values(
+            ascending=False
+        )
+    )
+
+    print("\n" + "=" * 70)
+    print("NUMBER OF UNIQUE PRODUCTS BY BRAND")
+    print("=" * 70)
+
+    print(brand_distribution)
+
+
+    plt.figure(
+        figsize=(10, 6)
+    )
+
+    brand_distribution.plot(
+        kind="bar"
+    )
+
+    plt.title(
+        "Number of Unique Mobile Products by Brand"
+    )
+
+    plt.xlabel("Brand")
+    plt.ylabel("Number of Unique Products")
+
+    plt.xticks(
+        rotation=45
+    )
+
+    plt.tight_layout()
+    plt.show()
+
+
+# ============================================================
+# 8. COUNTRY ANALYSIS
+# ============================================================
+
+if all(
+    column in df.columns
+    for column in ["country", "model"]
+):
+
+    country_distribution = (
+        df.groupby("country")["model"]
+        .nunique()
+        .sort_values(
+            ascending=False
+        )
+    )
+
+    print("\n" + "=" * 70)
+    print("NUMBER OF UNIQUE PRODUCTS BY COUNTRY")
+    print("=" * 70)
+
+    print(country_distribution)
+
+
+    plt.figure(
+        figsize=(10, 6)
+    )
+
+    country_distribution.head(15).plot(
+        kind="bar"
+    )
+
+    plt.title(
+        "Top Countries by Number of Mobile Products"
+    )
+
+    plt.xlabel("Country")
+    plt.ylabel("Number of Unique Products")
+
+    plt.xticks(
+        rotation=45
+    )
+
+    plt.tight_layout()
+    plt.show()
+
+
+    country_summary = pd.DataFrame({
+        "Country":
+            country_distribution.index,
+
+        "Unique_Product_Count":
+            country_distribution.values
+    })
+
+    country_summary.to_csv(
+        EDA_COUNTRY_OUTPUT,
+        index=False
+    )
+
+
+# ============================================================
+# 9. PRODUCT-LEVEL SUMMARY
+# ============================================================
+
+required_product_columns = [
+    "brand",
+    "model",
+    "price_usd",
+    "rating",
+    "battery_life_rating",
+    "camera_rating",
+    "performance_rating",
+    "design_rating",
+    "display_rating"
+]
+
+if all(
+    column in df.columns
+    for column in required_product_columns
+):
+
+    product_summary = (
+        df.groupby(
+            ["brand", "model"]
+        )
+        .agg(
+            Average_Price=(
+                "price_usd",
+                "mean"
+            ),
+
+            Average_Rating=(
+                "rating",
+                "mean"
+            ),
+
+            Battery_Rating=(
+                "battery_life_rating",
+                "mean"
+            ),
+
+            Camera_Rating=(
+                "camera_rating",
+                "mean"
+            ),
+
+            Performance_Rating=(
+                "performance_rating",
+                "mean"
+            ),
+
+            Design_Rating=(
+                "design_rating",
+                "mean"
+            ),
+
+            Display_Rating=(
+                "display_rating",
+                "mean"
+            ),
+
+            Review_Count=(
+                "rating",
+                "count"
+            )
+        )
+        .reset_index()
+    )
+
+
+    product_summary[
+        "Average_Price"
+    ] = product_summary[
+        "Average_Price"
+    ].round(2)
+
+    product_summary[
+        "Average_Rating"
+    ] = product_summary[
+        "Average_Rating"
+    ].round(2)
+
+    product_summary.to_csv(
+        EDA_PRODUCT_OUTPUT,
+        index=False
+    )
+
+    print("\n" + "=" * 70)
+    print("PRODUCT-LEVEL SUMMARY")
+    print("=" * 70)
+
+    print(
+        product_summary.head(10)
+        .to_string(index=False)
+    )
+
+
+# ============================================================
+# 10. TOP-RATED PRODUCTS
+# ============================================================
+
+if all(
+    column in df.columns
+    for column in [
+        "brand",
+        "model",
+        "rating"
+    ]
+):
+
+    top_rated_products = (
+        df.groupby(
+            ["brand", "model"]
+        )["rating"]
+        .mean()
+        .sort_values(
+            ascending=False
+        )
+        .head(10)
+    )
+
+    print("\n" + "=" * 70)
+    print("TOP 10 RATED PRODUCTS")
+    print("=" * 70)
+
+    print(
+        top_rated_products.round(2)
+    )
+
+
+    plt.figure(
+        figsize=(10, 6)
+    )
+
+    top_rated_products.sort_values().plot(
+        kind="barh"
+    )
+
+    plt.title(
+        "Top 10 Rated Mobile Products"
+    )
+
+    plt.xlabel("Average Rating")
+    plt.ylabel("Product")
+
+    plt.tight_layout()
+    plt.show()
+
+
+# ============================================================
+# 11. LOWEST-RATED PRODUCTS
+# ============================================================
+
+if all(
+    column in df.columns
+    for column in [
+        "brand",
+        "model",
+        "rating"
+    ]
+):
+
+    low_rated_products = (
+        df.groupby(
+            ["brand", "model"]
+        )["rating"]
+        .mean()
+        .sort_values(
+            ascending=True
+        )
+        .head(10)
+    )
+
+    print("\n" + "=" * 70)
+    print("LOWEST 10 RATED PRODUCTS")
+    print("=" * 70)
+
+    print(
+        low_rated_products.round(2)
+    )
+
+
+    plt.figure(
+        figsize=(10, 6)
+    )
+
+    low_rated_products.sort_values().plot(
+        kind="barh"
+    )
+
+    plt.title(
+        "Lowest 10 Rated Mobile Products"
+    )
+
+    plt.xlabel("Average Rating")
+    plt.ylabel("Product")
+
+    plt.tight_layout()
+    plt.show()
+
+
+# ============================================================
+# 12. PRICE VS RATING
+# ============================================================
+
+if all(
+    column in df.columns
+    for column in [
+        "price_usd",
+        "rating"
+    ]
+):
+
+    correlation = df[
+        [
+            "price_usd",
+            "rating"
+        ]
+    ].corr().iloc[0, 1]
+
+    print("\n" + "=" * 70)
+    print("PRICE VS RATING")
+    print("=" * 70)
+
+    print(
+        f"Correlation: {correlation:.3f}"
+    )
+
+
+    plt.figure(
+        figsize=(8, 6)
+    )
+
+    sns.scatterplot(
+        data=df,
+        x="price_usd",
+        y="rating",
+        alpha=0.5
+    )
+
+    plt.title(
+        "Price vs Rating"
+    )
+
+    plt.xlabel(
+        "Price (USD)"
+    )
+
+    plt.ylabel(
+        "Rating"
+    )
+
+    plt.tight_layout()
+    plt.show()
+
+
+# ============================================================
+# 13. PRICE VS PERFORMANCE
+# ============================================================
+
+if all(
+    column in df.columns
+    for column in [
+        "price_usd",
+        "performance_rating"
+    ]
+):
+
+    correlation = df[
+        [
+            "price_usd",
+            "performance_rating"
+        ]
+    ].corr().iloc[0, 1]
+
+    print("\n" + "=" * 70)
+    print("PRICE VS PERFORMANCE")
+    print("=" * 70)
+
+    print(
+        f"Correlation: {correlation:.3f}"
+    )
+
+
+    plt.figure(
+        figsize=(8, 6)
+    )
+
+    sns.scatterplot(
+        data=df,
+        x="price_usd",
+        y="performance_rating",
+        alpha=0.5
+    )
+
+    plt.title(
+        "Price vs Performance Rating"
+    )
+
+    plt.xlabel(
+        "Price (USD)"
+    )
+
+    plt.ylabel(
+        "Performance Rating"
+    )
+
+    plt.tight_layout()
+    plt.show()
+
+
+# ============================================================
+# 14. PRICE VS CAMERA
+# ============================================================
+
+if all(
+    column in df.columns
+    for column in [
+        "price_usd",
+        "camera_rating"
+    ]
+):
+
+    plt.figure(
+        figsize=(8, 6)
+    )
+
+    sns.scatterplot(
+        data=df,
+        x="price_usd",
+        y="camera_rating",
+        alpha=0.5
+    )
+
+    plt.title(
+        "Price vs Camera Rating"
+    )
+
+    plt.xlabel(
+        "Price (USD)"
+    )
+
+    plt.ylabel(
+        "Camera Rating"
+    )
+
+    plt.tight_layout()
+    plt.show()
+
+
+# ============================================================
+# 15. PRICE VS BATTERY
+# ============================================================
+
+if all(
+    column in df.columns
+    for column in [
+        "price_usd",
+        "battery_life_rating"
+    ]
+):
+
+    plt.figure(
+        figsize=(8, 6)
+    )
+
+    sns.scatterplot(
+        data=df,
+        x="price_usd",
+        y="battery_life_rating",
+        alpha=0.5
+    )
+
+    plt.title(
+        "Price vs Battery Life Rating"
+    )
+
+    plt.xlabel(
+        "Price (USD)"
+    )
+
+    plt.ylabel(
+        "Battery Life Rating"
+    )
+
+    plt.tight_layout()
+    plt.show()
+
+
+# ============================================================
+# 16. RATING DISTRIBUTION
+# ============================================================
+
+if "rating" in df.columns:
+
+    plt.figure(
+        figsize=(8, 6)
+    )
+
+    sns.histplot(
+        df["rating"],
+        bins=20,
+        kde=True
+    )
+
+    plt.title(
+        "Distribution of Mobile Product Ratings"
+    )
+
+    plt.xlabel(
+        "Rating"
+    )
+
+    plt.ylabel(
+        "Number of Reviews"
+    )
+
+    plt.tight_layout()
+    plt.show()
+
+
+# ============================================================
+# 17. CORRELATION MATRIX
+# ============================================================
+
+correlation_features = [
+    "price_usd",
+    "rating",
+    "battery_life_rating",
+    "camera_rating",
+    "performance_rating",
+    "design_rating",
+    "display_rating",
+    "engagement_score"
+]
+
+available_features = [
+    column
+    for column in correlation_features
+    if column in df.columns
+]
+
+if len(available_features) >= 2:
+
+    correlation_matrix = (
+        df[available_features]
+        .corr()
+    )
+
+    print("\n" + "=" * 70)
+    print("CORRELATION MATRIX")
+    print("=" * 70)
+
+    print(
+        correlation_matrix.round(2)
+    )
+
+
+    plt.figure(
+        figsize=(10, 8)
+    )
+
     sns.heatmap(
         correlation_matrix,
         annot=True,
@@ -219,349 +685,459 @@ if not numeric_data.empty:
         fmt=".2f",
         linewidths=0.5
     )
-    plt.title("Correlation Heatmap")
+
+    plt.title(
+        "Correlation Between Product Features"
+    )
+
     plt.tight_layout()
     plt.show()
 
-# ENGAGEMENT SCORE VS REVENUE
+
+# ============================================================
+# 18. BRAND-WISE AVERAGE RATING
+# ============================================================
 
 if all(
-    col in campaign_df.columns
-    for col in ["Engagement_Score", "Revenue"]
+    column in df.columns
+    for column in [
+        "brand",
+        "rating"
+    ]
 ):
-    plt.figure(figsize=(8, 5))
-    sns.scatterplot(
-        data=campaign_df,
-        x="Engagement_Score",
-        y="Revenue",
-        hue="Brand" if "Brand" in campaign_df.columns else None
-    )
-    plt.title("Engagement Score vs Revenue")
-    plt.tight_layout()
-    plt.show()
 
-# CTR VS REVENUE
-
-if all(
-    col in campaign_df.columns
-    for col in ["CTR", "Revenue"]
-):
-    plt.figure(figsize=(8, 5))
-    sns.scatterplot(
-        data=campaign_df,
-        x="CTR",
-        y="Revenue",
-        hue="Brand" if "Brand" in campaign_df.columns else None
-    )
-    plt.title("CTR vs Revenue")
-    plt.tight_layout()
-    plt.show()
-
-# ACQUISITION COST VS REVENUE
-
-if all(
-    col in campaign_df.columns
-    for col in ["Acquisition_Cost", "Revenue"]
-):
-    plt.figure(figsize=(8, 5))
-    sns.scatterplot(
-        data=campaign_df,
-        x="Acquisition_Cost",
-        y="Revenue",
-        hue="Brand" if "Brand" in campaign_df.columns else None
-    )
-    plt.title("Acquisition Cost vs Revenue")
-    plt.tight_layout()
-    plt.show()
-
-# CLICKS VS REVENUE
-
-if all(
-    col in campaign_df.columns
-    for col in ["Clicks", "Revenue"]
-):
-    plt.figure(figsize=(8, 5))
-    sns.scatterplot(
-        data=campaign_df,
-        x="Clicks",
-        y="Revenue",
-        hue="Brand" if "Brand" in campaign_df.columns else None
-    )
-    plt.title("Clicks vs Revenue")
-    plt.tight_layout()
-    plt.show()
-
-# ACQUISITION COST VS ROI
-
-if all(
-    col in campaign_df.columns
-    for col in ["Acquisition_Cost", "ROI"]
-):
-    plt.figure(figsize=(8, 5))
-    sns.scatterplot(
-        data=campaign_df,
-        x="Acquisition_Cost",
-        y="ROI",
-        hue="Brand" if "Brand" in campaign_df.columns else None
-    )
-    plt.title("Acquisition Cost vs ROI")
-    plt.tight_layout()
-    plt.show()
-
-# PROFIT VS LOSS CAMPAIGNS
-
-if "Profit_Flag" in campaign_df.columns:
-    plt.figure(figsize=(6, 4))
-    sns.countplot(
-        data=campaign_df,
-        x="Profit_Flag"
-    )
-    plt.title("Profit vs Loss Campaigns")
-    plt.xlabel("Profit Flag (0 = Loss, 1 = Profit)")
-    plt.ylabel("Campaign Count")
-    plt.tight_layout()
-    plt.show()
-
-    print("\nProfit Flag Distribution:")
-    print(campaign_df["Profit_Flag"].value_counts())
-
-# TOP 10 REVENUE CAMPAIGNS
-
-if all(
-    col in campaign_df.columns
-    for col in ["Campaign_ID", "Revenue"]
-):
-    top10 = campaign_df.nlargest(
-        10,
-        "Revenue"
+    brand_rating = (
+        df.groupby("brand")["rating"]
+        .mean()
+        .sort_values(
+            ascending=False
+        )
     )
 
-    print("\nTop 10 Revenue Campaigns:")
+    print("\n" + "=" * 70)
+    print("BRAND-WISE AVERAGE RATING")
+    print("=" * 70)
+
     print(
-        top10[
-            [
-                "Campaign_ID",
-                "Brand",
-                "Revenue",
-                "ROI"
-            ]
-        ]
+        brand_rating.round(2)
     )
 
-    plt.figure(figsize=(12, 5))
-    sns.barplot(
-        data=top10,
-        x="Campaign_ID",
-        y="Revenue"
+
+    plt.figure(
+        figsize=(10, 6)
     )
-    plt.xticks(rotation=45)
-    plt.title("Top 10 Revenue Campaigns")
+
+    brand_rating.plot(
+        kind="bar"
+    )
+
+    plt.title(
+        "Average Rating by Brand"
+    )
+
+    plt.xlabel(
+        "Brand"
+    )
+
+    plt.ylabel(
+        "Average Rating"
+    )
+
+    plt.xticks(
+        rotation=45
+    )
+
     plt.tight_layout()
     plt.show()
 
-# BOTTOM 10 REVENUE CAMPAIGNS
+
+# ============================================================
+# 19. BRAND-WISE AVERAGE PRICE
+# ============================================================
 
 if all(
-    col in campaign_df.columns
-    for col in ["Campaign_ID", "Revenue"]
+    column in df.columns
+    for column in [
+        "brand",
+        "price_usd"
+    ]
 ):
-    bottom10 = campaign_df.nsmallest(
-        10,
-        "Revenue"
+
+    brand_price = (
+        df.groupby("brand")["price_usd"]
+        .mean()
+        .sort_values(
+            ascending=False
+        )
     )
 
-    print("\nBottom 10 Revenue Campaigns:")
+    print("\n" + "=" * 70)
+    print("BRAND-WISE AVERAGE PRICE")
+    print("=" * 70)
+
     print(
-        bottom10[
-            [
-                "Campaign_ID",
-                "Brand",
-                "Revenue",
-                "ROI"
-            ]
-        ]
+        brand_price.round(2)
     )
 
-    plt.figure(figsize=(12, 5))
-    sns.barplot(
-        data=bottom10,
-        x="Campaign_ID",
-        y="Revenue"
+
+    plt.figure(
+        figsize=(10, 6)
     )
-    plt.xticks(rotation=45)
-    plt.title("Bottom 10 Revenue Campaigns")
+
+    brand_price.plot(
+        kind="bar"
+    )
+
+    plt.title(
+        "Average Price by Brand"
+    )
+
+    plt.xlabel(
+        "Brand"
+    )
+
+    plt.ylabel(
+        "Average Price (USD)"
+    )
+
+    plt.xticks(
+        rotation=45
+    )
+
     plt.tight_layout()
     plt.show()
 
-# TOP 10 ROI CAMPAIGNS
 
-if all(
-    col in campaign_df.columns
-    for col in ["Campaign_ID", "ROI"]
-):
-    top_roi = campaign_df.nlargest(
-        10,
-        "ROI"
-    )
+# ============================================================
+# 20. BRAND SUMMARY TABLE
+# ============================================================
 
-    print("\nTop 10 ROI Campaigns:")
-    print(
-        top_roi[
-            [
-                "Campaign_ID",
-                "Brand",
-                "Revenue",
-                "ROI"
-            ]
-        ]
-    )
+if "brand" in df.columns:
 
-# BOTTOM 10 ROI CAMPAIGNS
+    aggregation = {}
 
-if all(
-    col in campaign_df.columns
-    for col in ["Campaign_ID", "ROI"]
-):
-    bottom_roi = campaign_df.nsmallest(
-        10,
-        "ROI"
-    )
+    if "model" in df.columns:
+        aggregation[
+            "Unique_Products"
+        ] = (
+            "model",
+            "nunique"
+        )
 
-    print("\nBottom 10 ROI Campaigns:")
-    print(
-        bottom_roi[
-            [
-                "Campaign_ID",
-                "Brand",
-                "Revenue",
-                "ROI"
-            ]
-        ]
-    )
+    if "rating" in df.columns:
+        aggregation[
+            "Average_Rating"
+        ] = (
+            "rating",
+            "mean"
+        )
 
-# CHANNEL-WISE EFFECTIVENESS
+    if "price_usd" in df.columns:
+        aggregation[
+            "Average_Price_USD"
+        ] = (
+            "price_usd",
+            "mean"
+        )
 
-channel_columns = [
-    col for col in campaign_df.columns
-    if col.startswith("Channel_")
+    if "performance_rating" in df.columns:
+        aggregation[
+            "Average_Performance"
+        ] = (
+            "performance_rating",
+            "mean"
+        )
+
+    if "camera_rating" in df.columns:
+        aggregation[
+            "Average_Camera"
+        ] = (
+            "camera_rating",
+            "mean"
+        )
+
+    if "battery_life_rating" in df.columns:
+        aggregation[
+            "Average_Battery"
+        ] = (
+            "battery_life_rating",
+            "mean"
+        )
+
+    if aggregation:
+
+        brand_summary = (
+            df.groupby("brand")
+            .agg(**aggregation)
+            .reset_index()
+        )
+
+        numeric_summary_columns = (
+            brand_summary
+            .select_dtypes(
+                include="number"
+            )
+            .columns
+        )
+
+        brand_summary[
+            numeric_summary_columns
+        ] = brand_summary[
+            numeric_summary_columns
+        ].round(2)
+
+        brand_summary.to_csv(
+            EDA_BRAND_OUTPUT,
+            index=False
+        )
+
+        print("\n" + "=" * 70)
+        print("BRAND ANALYSIS SUMMARY")
+        print("=" * 70)
+
+        print(
+            brand_summary
+            .to_string(index=False)
+        )
+
+
+# ============================================================
+# 21. SPECIFICATION ANALYSIS
+# ============================================================
+
+specification_features = [
+    "battery_life_rating",
+    "camera_rating",
+    "performance_rating",
+    "design_rating",
+    "display_rating"
 ]
 
-channel_summary = []
+available_specifications = [
+    column
+    for column in specification_features
+    if column in df.columns
+]
 
-for channel_col in channel_columns:
+if available_specifications:
 
-    channel_data = campaign_df[
-        campaign_df[channel_col] == 1
+    specification_summary = (
+        df[available_specifications]
+        .mean()
+        .sort_values(
+            ascending=False
+        )
+    )
+
+    print("\n" + "=" * 70)
+    print("AVERAGE PRODUCT SPECIFICATION RATINGS")
+    print("=" * 70)
+
+    print(
+        specification_summary.round(2)
+    )
+
+
+    plt.figure(
+        figsize=(10, 6)
+    )
+
+    specification_summary.plot(
+        kind="bar"
+    )
+
+    plt.title(
+        "Average Mobile Product Specification Ratings"
+    )
+
+    plt.xlabel(
+        "Specification"
+    )
+
+    plt.ylabel(
+        "Average Rating"
+    )
+
+    plt.xticks(
+        rotation=45
+    )
+
+    plt.tight_layout()
+    plt.show()
+
+
+    specification_table = pd.DataFrame({
+
+        "Feature":
+            specification_summary.index,
+
+        "Average_Rating":
+            specification_summary.values.round(2)
+    })
+
+
+    specification_table.to_csv(
+        EDA_SPEC_OUTPUT,
+        index=False
+    )
+
+
+# ============================================================
+# 22. ENGAGEMENT ANALYSIS
+# ============================================================
+
+if all(
+    column in df.columns
+    for column in [
+        "brand",
+        "engagement_score"
     ]
+):
 
-    if len(channel_data) > 0:
-
-        channel_summary.append({
-            "Channel": channel_col.replace(
-                "Channel_",
-                ""
-            ),
-            "Campaign_Count": len(channel_data),
-            "Total_Revenue": channel_data["Revenue"].sum(),
-            "Average_Revenue": channel_data["Revenue"].mean(),
-            "Average_ROI": channel_data["ROI"].mean(),
-            "Total_Clicks": channel_data["Clicks"].sum(),
-            "Total_Conversions": channel_data["Conversions"].sum(),
-            "Average_Engagement": channel_data["Engagement_Score"].mean()
-        })
-
-if channel_summary:
-
-    channel_analysis = pd.DataFrame(
-        channel_summary
-    ).sort_values(
-        "Total_Revenue",
-        ascending=False
+    brand_engagement = (
+        df.groupby("brand")[
+            "engagement_score"
+        ]
+        .mean()
+        .sort_values(
+            ascending=False
+        )
     )
 
-    print("\nChannel-Wise Effectiveness:")
-    print(channel_analysis)
+    print("\n" + "=" * 70)
+    print("BRAND-WISE ENGAGEMENT SCORE")
+    print("=" * 70)
 
-    plt.figure(figsize=(10, 6))
-
-    sns.barplot(
-        data=channel_analysis,
-        x="Channel",
-        y="Total_Revenue"
+    print(
+        brand_engagement.round(2)
     )
 
-    plt.xticks(rotation=30)
-    plt.title("Channel-Wise Total Revenue")
-    plt.tight_layout()
-    plt.show()
 
-    plt.figure(figsize=(10, 6))
+# ============================================================
+# 23. SAVE TOP PRODUCT TABLE
+# ============================================================
 
-    sns.barplot(
-        data=channel_analysis,
-        x="Channel",
-        y="Average_ROI"
+if all(
+    column in df.columns
+    for column in [
+        "brand",
+        "model",
+        "rating"
+    ]
+):
+
+    top_products = (
+        df.groupby(
+            ["brand", "model"]
+        )
+        .agg(
+            Average_Rating=(
+                "rating",
+                "mean"
+            )
+        )
+        .reset_index()
+        .sort_values(
+            "Average_Rating",
+            ascending=False
+        )
+        .head(10)
     )
 
-    plt.xticks(rotation=30)
-    plt.title("Channel-Wise Average ROI")
-    plt.tight_layout()
-    plt.show()
+    top_products[
+        "Average_Rating"
+    ] = top_products[
+        "Average_Rating"
+    ].round(2)
 
-# BRAND PERFORMANCE SUMMARY
-
-if "Brand" in campaign_df.columns:
-
-    brand_summary = campaign_df.groupby(
-        "Brand"
-    ).agg(
-        Campaign_Count=("Campaign_ID", "count"),
-        Total_Revenue=("Revenue", "sum"),
-        Average_Revenue=("Revenue", "mean"),
-        Average_ROI=("ROI", "mean"),
-        Total_Clicks=("Clicks", "sum"),
-        Total_Conversions=("Conversions", "sum"),
-        Average_Engagement=("Engagement_Score", "mean")
-    ).reset_index()
-
-    brand_summary = brand_summary.sort_values(
-        "Total_Revenue",
-        ascending=False
+    top_products.to_csv(
+        "eda_top_rated_products.csv",
+        index=False
     )
 
-    print("\nBrand Performance Summary:")
-    print(brand_summary)
 
-# PLOTLY BRAND REVENUE CHART
+# ============================================================
+# 24. SAVE LOW PRODUCT TABLE
+# ============================================================
 
-if "brand_revenue" in locals():
+if all(
+    column in df.columns
+    for column in [
+        "brand",
+        "model",
+        "rating"
+    ]
+):
 
-    fig = px.bar(
-        brand_revenue,
-        x="Brand",
-        y="Revenue",
-        color="Brand",
-        title="Brand Revenue Comparison"
+    low_products = (
+        df.groupby(
+            ["brand", "model"]
+        )
+        .agg(
+            Average_Rating=(
+                "rating",
+                "mean"
+            )
+        )
+        .reset_index()
+        .sort_values(
+            "Average_Rating",
+            ascending=True
+        )
+        .head(10)
     )
 
-    fig.update_layout(
-        xaxis_title="Brand",
-        yaxis_title="Total Revenue",
-        template="plotly_white"
+    low_products[
+        "Average_Rating"
+    ] = low_products[
+        "Average_Rating"
+    ].round(2)
+
+    low_products.to_csv(
+        "eda_low_rated_products.csv",
+        index=False
     )
 
-    fig.write_html("brand_revenue.html")
 
-    fig.show()
+# ============================================================
+# 25. COMPLETION
+# ============================================================
 
+print("\n" + "=" * 70)
+print("EDA COMPLETED SUCCESSFULLY")
+print("=" * 70)
 
-print("\nFinal Dataset Shape:")
-print(campaign_df.shape)
+print("\nEDA output files created:")
 
-print("\nFinal Missing Values:")
-print(campaign_df.isnull().sum().sum())
+print(
+    f"1. {EDA_BRAND_OUTPUT}"
+)
 
-print("\nDuplicate Records:")
-print(campaign_df.duplicated().sum())
+print(
+    f"2. {EDA_SPEC_OUTPUT}"
+)
 
-print("\nAll EDA Analysis Completed Successfully!")
+print(
+    f"3. {EDA_PRODUCT_OUTPUT}"
+)
+
+if "country" in df.columns:
+
+    print(
+        f"4. {EDA_COUNTRY_OUTPUT}"
+    )
+
+print(
+    "5. eda_top_rated_products.csv"
+)
+
+print(
+    "6. eda_low_rated_products.csv"
+)
+
+print("\nNext Step:")
+print(
+    "Run Step4_Clustering.py"
+)
+
+print("=" * 70)
